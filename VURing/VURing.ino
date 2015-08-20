@@ -1,5 +1,13 @@
-#include <Adafruit_NeoPixel.h>
 #include <MsTimer2.h>
+#include <Adafruit_NeoPixel.h>
+
+#ifdef __AVR__
+  #include <avr/power.h>
+#endif
+
+#define NP_DIN_PIN 4
+#define NP_LED_COUNT 12
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NP_LED_COUNT, NP_DIN_PIN, NEO_GRB + NEO_KHZ800);
 
 //
 // VURing --- VU + Spectrum analyzer on Neopixel
@@ -52,8 +60,20 @@ void setup() {
   attachInterrupt(SD_GATE_IRQ,checkTheGate,CHANGE);
 }
 
-void refreshMeter(intenv){
-  *epC = env;  
+void refreshMeter(int env){
+  int avg;
+  int *p;
+  
+  *epC++ = env; 
+  if(epC == epE){
+    epC = epS;
+  }
+
+  for(avg=0,p=epS; p<epE; ){
+    avg += *p++;    
+  }
+  avg /= ENV_COLLECTION_WIDTH;
+  return;
 }
 
 void loop() {
