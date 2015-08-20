@@ -2,7 +2,7 @@
 #include <Adafruit_NeoPixel.h>
 
 #ifdef __AVR__
-  #include <avr/power.h>
+#include <avr/power.h>
 #endif
 
 #define NP_DIN_PIN 4
@@ -32,12 +32,13 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NP_LED_COUNT, NP_DIN_PIN, NEO_GRB + 
 #define ENV_COLLECTION_WIDTH 10
 
 static int isGateOpen;
+static int lastVU;
 static int envCollection[ENV_COLLECTION_WIDTH];
 static int *epC;
 static int *epS;
 static int *epE;
 
-void checkTheGate(){
+void checkTheGate() {
   int value = analogRead(SD_GATE_PIN);
   isGateOpen = value;
   return;
@@ -47,42 +48,69 @@ void setup() {
   Serial.begin(115200);
 
   isGateOpen = 0;
-  memset(envCollection,0,sizeof(envCollection));
+  lastVU = 0;
+  memset(envCollection, 0, sizeof(envCollection));
   epS = &envCollection[0];
   epE = &envCollection[ENV_COLLECTION_WIDTH];
   epC = epS;
-  
-  pinMode(SD_GATE_PIN,INPUT);
-  pinMode(EQ_RESET_PIN,OUTPUT);
-  pinMode(EQ_STROBE_PIN,OUTPUT);
-  pinMode(NP_DIN_PIN,OUTPUT);
 
-  attachInterrupt(SD_GATE_IRQ,checkTheGate,CHANGE);
+  pinMode(SD_GATE_PIN, INPUT);
+  pinMode(EQ_RESET_PIN, OUTPUT);
+  pinMode(EQ_STROBE_PIN, OUTPUT);
+  pinMode(NP_DIN_PIN, OUTPUT);
+
+  attachInterrupt(SD_GATE_IRQ, checkTheGate, CHANGE);
+
+  strip.begin();
+  strip.show();
+
+  return;
 }
 
-void refreshMeter(int env){
+void updateNP(int pos) {
+  int a;
+  for (a=0; a<pos; a++) {
+    strip.Color(a, 0xFF, 0xFF, 0xFF);
+  }
+  for( ; a<NP_LED_COUNT; a++){
+    strip.Color(a, 0x00, 0x00, 0x00);
+  }
+  
+  strip.show();
+  return;
+}
+void checkEnvelope(int env) {
   int avg;
   int *p;
-  
-  *epC++ = env; 
-  if(epC == epE){
+
+  *epC++ = env;
+  if (epC == epE) {
     epC = epS;
   }
 
-  for(avg=0,p=epS; p<epE; ){
-    avg += *p++;    
+  for (avg = 0, p = epS; p < epE; ) {
+    avg += *p++;
   }
   avg /= ENV_COLLECTION_WIDTH;
+
+  // refresh strip
+  int thisVU = avg / NP_LED_COUNT;
+  if (thisVU != lastVU) {
+    updateNP(thisVU);
+
+
+    lastVU = thisVU;
+  }
   return;
 }
 
 void loop() {
-  if(isGateOpen){
+  if (isGateOpen) {
     int env = analogRead(SD_ENV_PIN); // read envelope value
-    refreshMeter(env);
+    checkEnvelope(env);
   }
-  else{
-    
+  else {
+
   }
-  delay(1000/100);
+  delay(1000 / 100);
 }
