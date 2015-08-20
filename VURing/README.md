@@ -1,6 +1,8 @@
 ﻿VURing
 
-SparkFun社のSound Detectorに触発され、MSGEQ7との組み合わせで作成開始。
-中途で後者をサンハヤトのXXXXに替えたところ、Sound DetectorのGATEが
-不安定になった。
+マイクで拾った音声の振幅(Envelope)と、同じく音声信号から7帯域のスペクトルを算出し
+これらを元にNeoPixel RingをフルカラーのVUメーターにする。LiPoで稼働、充電しながらでも
+使える様にする。
 
+https://www.sparkfun.com/products/12642
+http://www.sparkfun.com/products/10468
