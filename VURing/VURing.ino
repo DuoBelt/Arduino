@@ -25,6 +25,7 @@
 
 static int isGateOpen;
 static int envCollection[ENV_COLLECTION_WIDTH];
+static int *epC;
 static int *epS;
 static int *epE;
 
@@ -41,7 +42,8 @@ void setup() {
   memset(envCollection,0,sizeof(envCollection));
   epS = &envCollection[0];
   epE = &envCollection[ENV_COLLECTION_WIDTH];
-
+  epC = epS;
+  
   pinMode(SD_GATE_PIN,INPUT);
   pinMode(EQ_RESET_PIN,OUTPUT);
   pinMode(EQ_STROBE_PIN,OUTPUT);
@@ -50,9 +52,14 @@ void setup() {
   attachInterrupt(SD_GATE_IRQ,checkTheGate,CHANGE);
 }
 
+void refreshMeter(intenv){
+  *epC = env;  
+}
+
 void loop() {
   if(isGateOpen){
-    
+    int env = analogRead(SD_ENV_PIN); // read envelope value
+    refreshMeter(env);
   }
   else{
     
