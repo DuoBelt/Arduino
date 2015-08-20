@@ -51,4 +51,11 @@ void setup() {
 }
 
 void loop() {
+  if(isGateOpen){
+    
+  }
+  else{
+    
+  }
+  delay(1000/100);
 }
