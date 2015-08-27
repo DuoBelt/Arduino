@@ -79,6 +79,7 @@ void updateNP(int pos) {
   strip.show();
   return;
 }
+
 void checkEnvelope(int env) {
   int avg;
   int *p;
