@@ -37,7 +37,7 @@ void setup()
     uint8_t config_reg    = (t_sb << 5) | (filter << 2) | spi3w_en;
     uint8_t ctrl_hum_reg  = osrs_h;
     
-    Serial.begin(9600);
+    Serial.begin(115200);
     Wire.begin();
     
     writeReg(0xF2,ctrl_hum_reg);
@@ -61,7 +61,7 @@ void loop()
     temp_act = (double)temp_cal / 100.0;
     press_act = (double)press_cal / 100.0;
     hum_act = (double)hum_cal / 1024.0;
-    Serial.print("TEMP : ");
+    Serial.print(">>> TEMP : ");
     Serial.print(temp_act);
     Serial.print(" DegC  PRESS : ");
     Serial.print(press_act);
