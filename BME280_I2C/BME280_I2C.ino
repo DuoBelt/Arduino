@@ -94,6 +94,7 @@ void loop()
     mySerial.print(thisHum);
     mySerial.print("％ に変わりました");
     mySerial.println("");
+    Serial.println("Wao!");
     delay(1000 * 15);
   }
   else {
