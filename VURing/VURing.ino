@@ -78,10 +78,10 @@ void setup() {
 void updateNP(int pos) {
   int a;
   for (a=0; a<pos; a++) {
-    strip.Color(a, 0xFF, 0xFF, 0xFF);
+    strip.setPixelColor(a,strip.Color(0xFF, 0xFF, 0xFF));
   }
   for( ; a<NP_LED_COUNT; a++){
-    strip.Color(a, 0x00, 0x00, 0x00);
+    strip.setPixelColor(a,strip.Color(0x00, 0x00, 0x00));
   }
   
   strip.show();
