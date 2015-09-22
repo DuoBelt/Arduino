@@ -1,5 +1,6 @@
-#include <MsTimer2.h>
 #include <Adafruit_NeoPixel.h>
+
+#include <MsTimer2.h>
 
 #ifdef __AVR__
 #include <avr/power.h>
@@ -38,6 +39,11 @@ static int *epC;
 static int *epS;
 static int *epE;
 
+static unsigned char valueRGB[3];
+#define OffsetR 0
+#define OffsetG 1
+#define OffsetB 2
+
 void checkTheGate() {
   int value = analogRead(SD_GATE_PIN);
   isGateOpen = value;
@@ -53,6 +59,8 @@ void setup() {
   epS = &envCollection[0];
   epE = &envCollection[ENV_COLLECTION_WIDTH];
   epC = epS;
+
+  memset(valueRGB,0,sizeof(valueRGB));
 
   pinMode(SD_GATE_PIN, INPUT);
   pinMode(EQ_RESET_PIN, OUTPUT);
