@@ -1,6 +1,7 @@
-#include <avr/sleep.h>
-#include <MsTimer2.h>
 #include <SoftwareSerial.h>
+#include <avr/sleep.h>
+#include <avr/wdt.h>
+#include <MsTimer2.h>
 
 #include <Wire.h>
 
@@ -35,6 +36,10 @@ int16_t dig_H4;
 int16_t dig_H5;
 int8_t  dig_H6;
 
+void thisTimer(){
+  Serial.println("MsTimer2!");
+}
+
 void setup()
 {
   uint8_t osrs_t = 1;             //Temperature oversampling x 1
@@ -59,18 +64,15 @@ void setup()
   writeReg(0xF5, config_reg);
   readTrim();                    //
 
-  MsTimer2::set(1000*5,execSample);
-  MsTimer2::start();
-  set_sleep_mode(SLEEP_MODE_PWR_SAVE);
+//  MsTimer2::set(1000*5,thisTimer);
+//  MsTimer2::start();
 }
+
 
 static int lastHum = 0;
 static int thisHum = 0;
 
-void loop(){
-  sleep_mode();
-}
-void execSample()
+void loop()
 {
   double temp_act = 0.0, press_act = 0.0, hum_act = 0.0;
   signed long int temp_cal;
@@ -102,6 +104,7 @@ void execSample()
     mySerial.print(thisHum);
     mySerial.print("％ に変わりました");
     mySerial.println("");
+    Serial.println("Wao!");
 //    delay(1000 * 15);
   }
   else {
@@ -109,6 +112,13 @@ void execSample()
 //    delay(1000 * 5);
   }
   lastHum = thisHum;
+
+//  set_sleep_mode(SLEEP_MODE_IDLE);
+//  set_sleep_mode(SLEEP_MODE_PWR_SAVE);
+//  set_sleep_mode(SLEEP_MODE_STANDBY);
+//  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+//  sleep_mode();
+  delayWDT(9);
 }
 void readTrim()
 {
@@ -238,4 +248,44 @@ unsigned long int calibration_H(signed long int adc_H)
   v_x1 = (v_x1 > 419430400 ? 419430400 : v_x1);
   return (unsigned long int)(v_x1 >> 12);
 }
+
+void delayWDT(unsigned long t) {        // パワーダウンモードでdelayを実行
+  delayWDT_setup(t);                    // ウォッチドッグタイマー割り込み条件設定
+  ADCSRA &= ~(1 << ADEN);               // ADENビットをクリアしてADCを停止（120μA節約）
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);  // パワーダウンモード
+  sleep_enable();
+
+  sleep_mode();                         // ここでスリープに入る
+
+  sleep_disable();                      // WDTがタイムアップでここから動作再開 
+  ADCSRA |= (1 << ADEN);                // ADCの電源をON (|=が!=になっていたバグを修正2014/11/17)
+
+}
+
+void delayWDT_setup(unsigned int ii) {  // ウォッチドッグタイマーをセット。
+  // 引数はWDTCSRにセットするWDP0-WDP3の値。設定値と動作時間は概略下記
+  // 0=16ms, 1=32ms, 2=64ms, 3=128ms, 4=250ms, 5=500ms
+  // 6=1sec, 7=2sec, 8=4sec, 9=8sec
+  byte bb;
+  if (ii > 9 ){                         // 変な値を排除
+    ii = 9;
+  }
+  bb =ii & 7;                           // 下位3ビットをbbに
+  if (ii > 7){                          // 7以上（7.8,9）なら
+    bb |= (1 << 5);                     // bbの5ビット目(WDP3)を1にする
+  }
+  bb |= ( 1 << WDCE );
+
+  MCUSR &= ~(1 << WDRF);                // MCU Status Reg. Watchdog Reset Flag ->0
+  // start timed sequence
+  WDTCSR |= (1 << WDCE) | (1<<WDE);     // ウォッチドッグ変更許可（WDCEは4サイクルで自動リセット）
+  // set new watchdog timeout value
+  WDTCSR = bb;                          // 制御レジスタを設定
+  WDTCSR |= _BV(WDIE);
+} 
+
+ISR(WDT_vect) {                         // WDTがタイムアップした時に実行される処理
+  //  wdt_cycle++;                        // 必要ならコメントアウトを外す
+}
+
 
