@@ -38,7 +38,7 @@ void loop() {
   Serial.println(counter);
   mySerial.println(counter);
   ledStatus = !ledStatus;
-  digitalWrite(RLED, ledStatus);
+  digitalWrite(RLED,ledStatus);
 #if USE_MSTIMER2
 #else
   counter++;
