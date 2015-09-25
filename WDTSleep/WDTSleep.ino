@@ -1,24 +1,52 @@
+#define USE_MSTIMER2 false
+
+#if USE_MSTIMER2
+#include <MsTimer2.h>
+#endif
+
+#include <SoftwareSerial.h>
+
 #include <avr/sleep.h>
 #include <avr/wdt.h>
 
 #define RLED 13
 
+SoftwareSerial mySerial(5,6);
+
 static boolean ledStatus = LOW;
 static int counter = 0;
+
+#if USE_MSTIMER2
+void cyclePoint(){
+  counter++;
+}
+#endif
 
 void setup() {
   pinMode(RLED, OUTPUT);
   Serial.begin(115200);
+  mySerial.begin(9600);
+ 
+#if USE_MSTIMER2
+  MsTimer2::set(1000,cyclePoint);
+  MsTimer2::start();
+#endif
 }
 
 // the loop function runs over and over again forever
 void loop() {
   Serial.println(counter);
+  mySerial.println(counter);
   ledStatus = !ledStatus;
   digitalWrite(RLED, ledStatus);
+#if USE_MSTIMER2
+#else
   counter++;
-  delay(10);
+#endif
+  delay(1);
+//  delayWDT(6);
   delayWDT(7);
+//  delayWDT(8);
 }
 
 // ------------------------------------------------------
@@ -27,11 +55,11 @@ void loop() {
 void delayWDT(unsigned long t) {        // パワーダウンモードでdelayを実行
   delayWDT_setup(t);                    // ウォッチドッグタイマー割り込み条件設定
   ADCSRA &= ~(1 << ADEN);               // ADENビットをクリアしてADCを停止（120μA節約）
+//  set_sleep_mode(SLEEP_MODE_STANDBY);  // Standby mode
+//  set_sleep_mode(SLEEP_MODE_PWR_SAVE);  // PowerSave mode
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);  // パワーダウンモード
   sleep_enable();
-
   sleep_mode();                         // ここでスリープに入る
-
   sleep_disable();                      // WDTがタイムアップでここから動作再開
   ADCSRA |= (1 << ADEN);                // ADCの電源をON (|=が!=になっていたバグを修正2014/11/17)
 
