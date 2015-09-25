@@ -43,7 +43,7 @@ void loop() {
 #else
   counter++;
 #endif
-  delay(1);
+  delay(1); // enough???
 //  delayWDT(6);
   delayWDT(7);
 //  delayWDT(8);
