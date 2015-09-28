@@ -1,0 +1,27 @@
+#######################################
+# Syntax Coloring Map for Switches
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+Switches	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+setInterval	KEYWORD2
+setPin	KEYWORD2
+read	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+SWITCH_LEVEL	LITERAL1
+SWITCH_NLEVEL	LITERAL1
+SWITCH_HtoL	LITERAL1
+SWITCH_LtoH	LITERAL1
