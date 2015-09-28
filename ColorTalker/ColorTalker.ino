@@ -1,3 +1,7 @@
+//
+// 釧路高専：カラー読み取り機
+//
+
 #define DEBUG_THIS true
 
 #include <SoftwareSerial.h>
