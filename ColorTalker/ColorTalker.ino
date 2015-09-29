@@ -18,7 +18,7 @@
 
 #define BLUETOOTH_RX PD5
 #define BLUETOOTH_TX PD6
-#define ONBOARD_LED PB5
+#define ONBOARD_LED 13
 
 SoftwareSerial SWSerial(BLUETOOTH_RX,BLUETOOTH_TX);
 
@@ -53,11 +53,15 @@ void setup() {
 
 void loop() {
 #if DEBUG_THIS
+  digitalWrite(ONBOARD_LED,LOW);
   Serial.println("Enter ZZZ ...");
+  delay(10*5);
 #endif
   sleep_mode();
 #if DEBUG_THIS
-  Serial.println("Good morningt!");
+  digitalWrite(ONBOARD_LED,HIGH);
+//  Serial.println("Good morningt!");
+//  delay(1000);
 #endif
   readAndSendTheValue();
 }
