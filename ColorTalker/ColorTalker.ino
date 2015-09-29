@@ -2,8 +2,10 @@
 // 釧路高専：カラー読み取り機
 //
 
+#define USE_S11059 false
 #define DEBUG_THIS true
 
+#include <Wire.h>
 #include <SoftwareSerial.h>
 #include <avr/sleep.h>
 
@@ -16,13 +18,13 @@
 // A5 <--> I2C:SCL
 //
 
-#define BLUETOOTH_RX PD5
-#define BLUETOOTH_TX PD6
+#define BLUETOOTH_RX 5
+#define BLUETOOTH_TX 6
 #define ONBOARD_LED 13
 
 SoftwareSerial SWSerial(BLUETOOTH_RX,BLUETOOTH_TX);
 
-#define BUTTON PD3
+#define BUTTON 3
 
 void dummyRoutine(){
   return; 
@@ -32,9 +34,35 @@ void readAndSendTheValue(){
 #if DEBUG_THIS
   Serial.println("Read the RGB and send it!");
 #endif
-//
-//
-//
+
+#if USE_S11059
+  Wire.beginTransmission(0x2A);
+  Wire.write(0x03);
+  Wire.endTransmission();
+  Wire.requestFrom(0x2A, 8);
+  if (Wire.available()) {
+    static char *name[] = {"R","G","B","I"};
+    int HByte;
+    int LByte;
+    int value;
+    int a;
+    int b;
+    
+    for(a=0,b=sizeof(name)/sizeof(char *); b--; a++){
+      HByte = Wire.read();
+      LByte = Wire.read();
+      value = HByte << 8 | LByte;
+      Serial.print(name[a]);
+      Serial.print(" = ");
+      Serial.print(value);
+      Serial.print(" ");
+    }
+    Serial.println("");
+  }
+  Wire.endTransmission();
+#else
+  SWSerial.println("なんでやねん");
+#endif
   return;
 }
 
@@ -44,10 +72,22 @@ void setup() {
 
   pinMode(ONBOARD_LED,OUTPUT);
 
+#if USE_S11059
+  Wire.beginTransmission(0x2A);
+  Wire.write(0x0);
+  Wire.write(0x89);
+  Wire.endTransmission();
+  Wire.beginTransmission(0x2A);
+  Wire.write(0x0);
+  Wire.write(0x09);
+  Wire.endTransmission();
+#endif
+
   pinMode(BUTTON,INPUT_PULLUP);
   attachInterrupt(INT1,dummyRoutine,FALLING);
 
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+//  set_sleep_mode(SLEEP_MODE_PWR_SAVE);
   sleep_enable();
 }
 

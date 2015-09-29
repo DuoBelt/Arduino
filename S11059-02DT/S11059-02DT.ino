@@ -22,36 +22,27 @@ void loop() {
 }
 
 void colorread() {
-  int h, l;
   Wire.beginTransmission(0x2A);
   Wire.write(0x03);
   Wire.endTransmission();
   Wire.requestFrom(0x2A, 8);
   if (Wire.available()) {
-    //赤
-    h = Wire.read();
-    l = Wire.read();
-    r = h << 8 | l;
-    Serial.print("r:");
-    Serial.print(r);
-    //緑
-    h = Wire.read();
-    l = Wire.read();
-    g = h << 8 | l;
-    Serial.print(" g:");
-    Serial.print(g);
-    //青
-    h = Wire.read();
-    b = Wire.read();
-    r = h << 8 | l;
-    Serial.print(" b:");
-    Serial.print(b);
-    //赤外
-    h = Wire.read();
-    l = Wire.read();
-    a = h << 8 | l;
-    Serial.print(" a:");
-    Serial.print(a);
+    static char *name[] = {"R","G","B","I"};
+    int HByte;
+    int LByte;
+    int value;
+    int a;
+    int b;
+    
+    for(a=0,b=sizeof(name)/sizeof(char *); b--; a++){
+      HByte = Wire.read();
+      LByte = Wire.read();
+      value = HByte << 8 | LByte;
+      Serial.print(name[a]);
+      Serial.print(" = ");
+      Serial.print(value);
+      Serial.print(" ");
+    }
     Serial.println("");
   }
   Wire.endTransmission();
