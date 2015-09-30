@@ -16,7 +16,7 @@ SoftwareSerial mySerial(PIN_RX, PIN_TX);
 // -------------------------------------------------------------------------------------------
 class BME280 {
   public:
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     unsigned long counter;
     String text;
     BME280(int address) { // Constructor
@@ -26,14 +26,14 @@ class BME280 {
       int a;
       i2cAddress = address;
       pos = 0;
-      for(a=0;a<SAMPLES; a++){
+      for (a = 0; a < SAMPLES; a++) {
         dT[a] = dP[a] = dH[a] = 0.0;
       }
       counter = 0L;
       text = "";
     }
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    void start(){
+    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    void start() {
       uint8_t osrs_t = 1;             //Temperature oversampling x 1
       uint8_t osrs_p = 1;             //Pressure oversampling x 1
       uint8_t osrs_h = 1;             //Humidity oversampling x 1
@@ -41,72 +41,72 @@ class BME280 {
       uint8_t t_sb = 5;               //Tstandby 1000ms
       uint8_t filter = 0;             //Filter off
       uint8_t spi3w_en = 0;           //3-wire SPI Disable
-    
+
       uint8_t ctrl_meas_reg = (osrs_t << 5) | (osrs_p << 2) | mode;
       uint8_t config_reg    = (t_sb << 5) | (filter << 2) | spi3w_en;
       uint8_t ctrl_hum_reg  = osrs_h;
-    
+
       writeReg(0xF2, ctrl_hum_reg);
       writeReg(0xF4, ctrl_meas_reg);
       writeReg(0xF5, config_reg);
 
       uint8_t data[32], i = 0;
-        Wire.beginTransmission(i2cAddress);
-        Wire.write(0x88);
-        Wire.endTransmission();
-        Wire.requestFrom(i2cAddress, 24);
-        while (Wire.available()) {
-          data[i++] = Wire.read();
-        }
-      
-        Wire.beginTransmission(i2cAddress);
-        Wire.write(0xA1);
-        Wire.endTransmission();
-        Wire.requestFrom(i2cAddress, 1);
+      Wire.beginTransmission(i2cAddress);
+      Wire.write(0x88);
+      Wire.endTransmission();
+      Wire.requestFrom(i2cAddress, 24);
+      while (Wire.available()) {
         data[i++] = Wire.read();
-      
-        Wire.beginTransmission(i2cAddress);
-        Wire.write(0xE1);
-        Wire.endTransmission();
-        Wire.requestFrom(i2cAddress, 7);
-        while (Wire.available()) {
-          data[i++] = Wire.read();
-        }
-        dig_T1 = (data[1] << 8) | data[0];
-        dig_T2 = (data[3] << 8) | data[2];
-        dig_T3 = (data[5] << 8) | data[4];
-        dig_P1 = (data[7] << 8) | data[6];
-        dig_P2 = (data[9] << 8) | data[8];
-        dig_P3 = (data[11] << 8) | data[10];
-        dig_P4 = (data[13] << 8) | data[12];
-        dig_P5 = (data[15] << 8) | data[14];
-        dig_P6 = (data[17] << 8) | data[16];
-        dig_P7 = (data[19] << 8) | data[18];
-        dig_P8 = (data[21] << 8) | data[20];
-        dig_P9 = (data[23] << 8) | data[22];
-        dig_H1 = data[24];
-        dig_H2 = (data[26] << 8) | data[25];
-        dig_H3 = data[27];
-        dig_H4 = (data[28] << 4) | (0x0F & data[29]);
-        dig_H5 = (data[30] << 4) | ((data[29] >> 4) & 0x0F);
-        dig_H6 = data[31];
+      }
+
+      Wire.beginTransmission(i2cAddress);
+      Wire.write(0xA1);
+      Wire.endTransmission();
+      Wire.requestFrom(i2cAddress, 1);
+      data[i++] = Wire.read();
+
+      Wire.beginTransmission(i2cAddress);
+      Wire.write(0xE1);
+      Wire.endTransmission();
+      Wire.requestFrom(i2cAddress, 7);
+      while (Wire.available()) {
+        data[i++] = Wire.read();
+      }
+      dig_T1 = (data[1] << 8) | data[0];
+      dig_T2 = (data[3] << 8) | data[2];
+      dig_T3 = (data[5] << 8) | data[4];
+      dig_P1 = (data[7] << 8) | data[6];
+      dig_P2 = (data[9] << 8) | data[8];
+      dig_P3 = (data[11] << 8) | data[10];
+      dig_P4 = (data[13] << 8) | data[12];
+      dig_P5 = (data[15] << 8) | data[14];
+      dig_P6 = (data[17] << 8) | data[16];
+      dig_P7 = (data[19] << 8) | data[18];
+      dig_P8 = (data[21] << 8) | data[20];
+      dig_P9 = (data[23] << 8) | data[22];
+      dig_H1 = data[24];
+      dig_H2 = (data[26] << 8) | data[25];
+      dig_H3 = data[27];
+      dig_H4 = (data[28] << 4) | (0x0F & data[29]);
+      dig_H5 = (data[30] << 4) | ((data[29] >> 4) & 0x0F);
+      dig_H6 = data[31];
     }
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    void update(){
+    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    void update() {
       int a;
       int ss;
-      
+
       counter++;
-      ss = counter<SAMPLES? (int)counter:SAMPLES;
-      
+      ss = counter < SAMPLES ? (int)counter : SAMPLES;
+
       readTPH();
-      unsigned int offset = (pos++)%SAMPLES;
+      unsigned int offset = (pos++) % SAMPLES;
       dT[offset] = cT;
       dP[offset] = cP;
       dH[offset] = cH;
 
       aT = aP = aH = 0.0;
-      for(a=0; a<ss; a++){
+      for (a = 0; a < ss; a++) {
         aT += dT[a];
         aP += dP[a];
         aH += dH[a];
@@ -115,9 +115,9 @@ class BME280 {
       aP /= ss;
       aH /= ss;
 
-      text = String("T="+String(aT)+","+"P="+String(aP)+","+"H="+String(aH));
+      text = String("T=" + String(aT) + "," + "P=" + String(aP) + "," + "H=" + String(aH));
     }
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   private:
     int i2cAddress;
     unsigned int pos;
@@ -131,34 +131,34 @@ class BME280 {
     double cP;
     double cH;
     uint16_t dig_T1;
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  int16_t dig_T2;
-  int16_t dig_T3;
-  uint16_t dig_P1;
-  int16_t dig_P2;
-  int16_t dig_P3;
-  int16_t dig_P4;
-  int16_t dig_P5;
-  int16_t dig_P6;
-  int16_t dig_P7;
-  int16_t dig_P8;
-  int16_t dig_P9;
-  int8_t  dig_H1;
-  int16_t dig_H2;
-  int8_t  dig_H3;
-  int16_t dig_H4;
-  int16_t dig_H5;
-  int8_t  dig_H6;
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    void readTPH(){
-//      cT = 27.5;
-//      cP = 1005.0;
-//      cH = 56.7;
-//
+    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    int16_t dig_T2;
+    int16_t dig_T3;
+    uint16_t dig_P1;
+    int16_t dig_P2;
+    int16_t dig_P3;
+    int16_t dig_P4;
+    int16_t dig_P5;
+    int16_t dig_P6;
+    int16_t dig_P7;
+    int16_t dig_P8;
+    int16_t dig_P9;
+    int8_t  dig_H1;
+    int16_t dig_H2;
+    int8_t  dig_H3;
+    int16_t dig_H4;
+    int16_t dig_H5;
+    int8_t  dig_H6;
+    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    void readTPH() {
+      //      cT = 27.5;
+      //      cP = 1005.0;
+      //      cH = 56.7;
+      //
       int i = 0;
       uint32_t data[8];
-      int rawT,rawP,rawH;
-      
+      int rawT, rawP, rawH;
+
       Wire.beginTransmission(i2cAddress);
       Wire.write(0xF7);
       Wire.endTransmission();
@@ -172,9 +172,9 @@ class BME280 {
 #if DEBUGTHIS
       Serial.println(rawT);
 #endif
-//
+      //
     }
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     void writeReg(uint8_t reg_address, uint8_t data)
     {
       Wire.beginTransmission(i2cAddress);
@@ -199,7 +199,7 @@ void setup() {
 void loop() {
   int a;
   bme280.update();
-  if((bme280.counter%10) == 0){
+  if ((bme280.counter % 10) == 0) {
     String text = bme280.text;
 #if DEBUGTHIS
     Serial.println(text);
