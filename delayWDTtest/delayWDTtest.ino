@@ -121,7 +121,7 @@ void loop() {
   Serial.println(text);
   mySerial.println(text);
   delay(10);
-  for(a=0; a<60; a++){
+  for(a=0; a<10; a++){
     delayWDT(6);
   }
 }
