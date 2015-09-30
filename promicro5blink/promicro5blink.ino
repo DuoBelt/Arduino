@@ -34,9 +34,9 @@ void loop()
 
  digitalWrite(RXLED, LOW);   // set the LED on
  TXLED0; //TX LED is not tied to a normally controlled pin
- delay(1000);              // wait for a second
+ delay(1000/4);              // wait for a second
  digitalWrite(RXLED, HIGH);    // set the LED off
  TXLED1;
- delay(1000);              // wait for a second
+ delay(1000/4);              // wait for a second
 }
 
