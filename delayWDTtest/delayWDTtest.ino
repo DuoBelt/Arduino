@@ -1,3 +1,4 @@
+#include <SoftwareSerial.h>
 #include<avr/sleep.h>
 #include <avr/wdt.h>
 
@@ -5,9 +6,16 @@
 
 #define SAMPLES 60
 
+#define PIN_RX 5
+#define PIN_TX 6
+#define BAUD 9600
+SoftwareSerial mySerial(PIN_RX, PIN_TX);
+
+// -------------------------------------------------------------------------------------------
 class BME280 {
   public:
-    BME280(int address) {
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    BME280(int address) { // Constructor
       Serial.println("at contructor");
       int a;
       i2cAddress = address;
@@ -17,9 +25,37 @@ class BME280 {
       }
       counter = 0L;
     }
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     String toText(){
       return text;      
     }
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void writeReg(uint8_t reg_address, uint8_t data)
+{
+  Wire.beginTransmission(i2cAddress);
+  Wire.write(reg_address);
+  Wire.write(data);
+  Wire.endTransmission();
+}
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    void start(){
+      uint8_t osrs_t = 1;             //Temperature oversampling x 1
+      uint8_t osrs_p = 1;             //Pressure oversampling x 1
+      uint8_t osrs_h = 1;             //Humidity oversampling x 1
+      uint8_t mode = 3;               //Normal mode
+      uint8_t t_sb = 5;               //Tstandby 1000ms
+      uint8_t filter = 0;             //Filter off
+      uint8_t spi3w_en = 0;           //3-wire SPI Disable
+    
+      uint8_t ctrl_meas_reg = (osrs_t << 5) | (osrs_p << 2) | mode;
+      uint8_t config_reg    = (t_sb << 5) | (filter << 2) | spi3w_en;
+      uint8_t ctrl_hum_reg  = osrs_h;
+    
+      writeReg(0xF2, ctrl_hum_reg);
+      writeReg(0xF4, ctrl_meas_reg);
+      writeReg(0xF5, config_reg);
+    }
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     void update(){
       int a;
       int ss;
@@ -45,6 +81,7 @@ class BME280 {
 
       text = String("T="+String(aT)+","+"P="+String(aP)+","+"H="+String(aH));
     }
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   private:
     unsigned long counter;
     int i2cAddress;
@@ -59,27 +96,34 @@ class BME280 {
     double cP;
     double cH;
     String text;
-    
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     void readTPH(){
       cT = 27.5;
       cP = 1005.0;
       cH = 56.7;
     }
 };
+// -------------------------------------------------------------------------------------------
 
 BME280 bme280 = BME280(0x76);
 
 void setup() {
   Serial.begin(115200);
+  mySerial.begin(BAUD);
+  Wire.begin();
   Serial.println("at setup");
 }
 
 void loop() {
+  int a;
   bme280.update();
   String text = bme280.toText();
   Serial.println(text);
+  mySerial.println(text);
   delay(10);
-  delayWDT(6);
+  for(a=0; a<60; a++){
+    delayWDT(6);
+  }
 }
 
 // ---------------------------------------------------------------------
