@@ -1,7 +1,7 @@
 //
-// Color Picker
+// Color Picker 2015
 //
-//  wiring ...
+//  Pro Trinket Wiring ...
 //  D3 <--- tactile switch (PULL-UP)
 //  D5 <--- Bluetooth RX
 //  D6 ---> Bluetooth TX
@@ -15,6 +15,7 @@
 #define BLUETOOTH_RX 5
 #define BLUETOOTH_TX 6
 
+#define TACTILE_SW_PIN 9
 #define WHITELED_PIN 13
 #define VIBRATOR_PIN 8
 
@@ -22,7 +23,7 @@ SoftwareSerial SWSerial(BLUETOOTH_RX,BLUETOOTH_TX);
 
 void setup() {
   Serial.begin(115200);
-  SWSerial.begin(9600);
+  SWSerial.begin(115200);
   
   Wire.begin();
   Wire.beginTransmission(0x2A);
@@ -34,7 +35,7 @@ void setup() {
   Wire.write(0x09);
   Wire.endTransmission();
 
-  pinMode(3,INPUT_PULLUP);
+  pinMode(TACTILE_SW_PIN,INPUT_PULLUP);
   attachInterrupt(1,checkButton,CHANGE);
 
   pinMode(WHITELED_PIN,OUTPUT);
@@ -44,7 +45,7 @@ void setup() {
 static int pushCounter = 0;
 static int readCounter = 0;
 void checkButton(){
-  if(digitalRead(3) == LOW){
+  if(digitalRead(TACTILE_SW_PIN) == LOW){
     digitalWrite(WHITELED_PIN,HIGH);
     pushCounter++;
   }
