@@ -1,3 +1,11 @@
+// Vio - NC
+// Vcore - Vcc
+// GND - GND
+// CS8(?) - Vcc
+// SDI - A4
+// SCK - A5
+// SDO - GND
+
 #include <SoftwareSerial.h>
 #include <avr/sleep.h>
 #include <avr/wdt.h>
