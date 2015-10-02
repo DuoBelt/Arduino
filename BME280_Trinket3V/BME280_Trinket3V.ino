@@ -77,8 +77,8 @@ void setup()
 }
 
 
-static int lastHum = 0;
-static int thisHum = 0;
+static double lastHum = 0;
+static double thisHum = 0;
 
 void loop()
 {
@@ -102,14 +102,14 @@ void loop()
   Serial.print(hum_act);
   Serial.println(" %");
 
-  thisHum = (int)hum_act;
-  if (thisHum != lastHum) {
+  thisHum = hum_act;
+  if (abs(thisHum - lastHum) >=1.0) {
     digitalWrite(PIN_LED,HIGH);
 
     mySerial.print("湿度が ");
-    mySerial.print(lastHum);
+    mySerial.print((int)lastHum);
     mySerial.print("％ から");
-    mySerial.print(thisHum);
+    mySerial.print((int)thisHum);
     mySerial.print("％ に変わりました");
     mySerial.println("");
     Serial.println("Wao!");
@@ -126,7 +126,7 @@ void loop()
 //  set_sleep_mode(SLEEP_MODE_STANDBY);
 //  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 //  sleep_mode();
-  delayWDT(9);
+  delayWDT(6);
 }
 void readTrim()
 {
