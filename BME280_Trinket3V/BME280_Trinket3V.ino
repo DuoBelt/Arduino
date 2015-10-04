@@ -17,7 +17,8 @@
 
 #define PIN_RX 5
 #define PIN_TX 6
-#define BAUD 9600
+
+#define BAUD 115200
 SoftwareSerial mySerial(PIN_RX, PIN_TX);
 
 #define BME280_ADDRESS 0x76
@@ -113,19 +114,12 @@ void loop()
     mySerial.print("％ に変わりました");
     mySerial.println("");
     Serial.println("Wao!");
-//    delay(1000 * 15);
+    lastHum = thisHum;
   }
   else {
     digitalWrite(PIN_LED,LOW);
-//    delay(1000 * 5);
   }
-  lastHum = thisHum;
-
-//  set_sleep_mode(SLEEP_MODE_IDLE);
-//  set_sleep_mode(SLEEP_MODE_PWR_SAVE);
-//  set_sleep_mode(SLEEP_MODE_STANDBY);
-//  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-//  sleep_mode();
+  delay(1000/100);
   delayWDT(6);
 }
 void readTrim()
