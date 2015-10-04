@@ -1,3 +1,5 @@
+#include <wAcm1602Func.h>
+
 /* Pro Micro Test Code
    by: Nathan Seidle
    modified by: Jim Lindblom
@@ -29,14 +31,14 @@ void setup()
 
 void loop()
 {
- Serial.println("Hello world");  // Print "Hello World" to the Serial Monitor
+ Serial.println("Hello world !!");  // Print "Hello World" to the Serial Monitor
  Serial1.println("Hello!");  // Print "Hello!" over hardware UART
 
  digitalWrite(RXLED, LOW);   // set the LED on
  TXLED0; //TX LED is not tied to a normally controlled pin
- delay(1000/8);              // wait for a second
+ delay(1000/2);              // wait for a second
  digitalWrite(RXLED, HIGH);    // set the LED off
  TXLED1;
- delay(1000/8);              // wait for a second
+ delay(1000/2);              // wait for a second
 }
 
