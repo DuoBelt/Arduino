@@ -81,14 +81,14 @@ void setup() {
 void loop() {
   tph.updateTPH();
 
-  if (tph.isAvailable && ((tph.counter % 5) == 0)) {
+  if (tph.isAvailable && ((tph.counter % 15) == 0)) {
     String info = String("T=") + tph.T + String(",P=") + tph.P + String(",H=") + tph.H;
     Serial.println(info);
     BTSerial.println(info);
     delay(10);
 
   }
-  delayWDT(6);
+  delayWDT(8);
 }
 //
 void delayWDT(unsigned long t) {        // パワーダウンモードでdelayを実行
