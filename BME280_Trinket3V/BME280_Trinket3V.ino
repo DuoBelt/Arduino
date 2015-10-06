@@ -9,7 +9,6 @@
 #include <SoftwareSerial.h>
 #include <avr/sleep.h>
 #include <avr/wdt.h>
-#include <MsTimer2.h>
 
 #include <Wire.h>
 
@@ -45,10 +44,6 @@ int16_t dig_H4;
 int16_t dig_H5;
 int8_t  dig_H6;
 
-void thisTimer(){
-  Serial.println("MsTimer2!");
-}
-
 void setup()
 {
   uint8_t osrs_t = 1;             //Temperature oversampling x 1
@@ -72,18 +67,15 @@ void setup()
   writeReg(0xF4, ctrl_meas_reg);
   writeReg(0xF5, config_reg);
   readTrim();                    //
-
-//  MsTimer2::set(1000*5,thisTimer);
-//  MsTimer2::start();
 }
 
 
-static double lastHum = 0;
-static double thisHum = 0;
+static float lastHum = 0;
+static float thisHum = 0;
 
 void loop()
 {
-  double temp_act = 0.0, press_act = 0.0, hum_act = 0.0;
+  float temp_act = 0.0, press_act = 0.0, hum_act = 0.0;
   signed long int temp_cal;
   unsigned long int press_cal, hum_cal;
 
@@ -92,9 +84,9 @@ void loop()
   temp_cal = calibration_T(temp_raw);
   press_cal = calibration_P(pres_raw);
   hum_cal = calibration_H(hum_raw);
-  temp_act = (double)temp_cal / 100.0;
-  press_act = (double)press_cal / 100.0;
-  hum_act = (double)hum_cal / 1024.0;
+  temp_act = (float)temp_cal / 100.0;
+  press_act = (float)press_cal / 100.0;
+  hum_act = (float)hum_cal / 1024.0;
   Serial.print(">>> TEMP : ");
   Serial.print(temp_act);
   Serial.print(" DegC  PRESS : ");

@@ -34,20 +34,20 @@ Adafruit_BME280 bme; // I2C
 int counter = 0;
 
 void setup() {
-  pinMode(17,OUTPUT);
-  digitalWrite(17,HIGH);
+  pinMode(13,OUTPUT);
+  digitalWrite(13,HIGH);
 
   Serial.begin(115200);
   Serial.println(F("BME280 test"));
 
-  if (!bme.begin()) {
+  if (!bme.begin(0x76)) {
     Serial.println("Could not find a valid BME280 sensor, check wiring!");
     while (1);
   }
 }
 
 void loop() {
-    digitalWrite(17,(counter%2));
+    digitalWrite(13,(counter%2));
     Serial.print("Temperature = ");
     Serial.print(bme.readTemperature());
     Serial.println(" *C");
