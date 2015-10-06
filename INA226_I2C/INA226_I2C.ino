@@ -57,23 +57,15 @@ void setup() {
 }
 
 void loop() {
-  int sv, bv, c;
-  float bv_;
+  float V;
+  int A;
   
-  bv_ = bv = INA226_read(INA226_BUSV);
-  sv = INA226_read(INA226_SHUNTV);
-  c = INA226_read(INA226_CURRENT);
-  
-  bv_ *= 1.25;
-  
-  Serial.print(bv);    // bus voltage (reading)
-  Serial.print(" ");
-  Serial.print(sv);    // shunt voltage (reading)
-  Serial.print(" ");
-  Serial.print(bv_);  // bus voltage in [mV]
-  Serial.print(" ");
-  Serial.println(c);  // current in [mA]
+  V = (float)INA226_read(INA226_BUSV) * 1.25;
+  A = INA226_read(INA226_CURRENT);
 
+  String text = String("V : A = ") + String(V/1000.0) + String(" : ") +String(A/1000.0);
+  
+  Serial.println(text);
   delay(1000);
 }
 
