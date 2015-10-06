@@ -57,10 +57,10 @@ public:
 //    String info = String("T=") + T + String(",P=") + P + String(",H=") + H;
 //    Serial.println(info);
   }
+  unsigned int counter;
   bool isAvailable;
   float T,P,H;
 private:
-  unsigned int counter;
   float _T[SAMPLES];
   float _P[SAMPLES];
   float _H[SAMPLES];
@@ -83,13 +83,13 @@ void loop() {
 
   tph.saveThis(T,P,H);
 
-  if(tph.isAvailable){
+  if(tph.isAvailable && ((tph.counter%60) == 0)){
     String info = String("T=") + tph.T + String(",P=") + tph.P + String(",H=") + tph.H;
     Serial.println(info);
     delay(10);
   
-    delayWDT(8);
   }
+  delayWDT(6);
 }
 //
 void delayWDT(unsigned long t) {        // パワーダウンモードでdelayを実行
