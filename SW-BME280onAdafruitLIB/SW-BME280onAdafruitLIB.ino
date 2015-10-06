@@ -1,18 +1,23 @@
+// スイッチサイエンスのそれをAdafruitのライブラリで動かすシリーズ(笑)
+
+// Vio - NC
+// Vcore - Vcc
+// GND - GND
+// CS8(?) - Vcc
+// SDI - A4
+// SCK - A5
+// SDO - GND
+
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 
-//#define SEALEVELPRESSURE_HPA (1013.25)
-
 Adafruit_BME280 bme; // I2C
 
 void setup() {
-  pinMode(13, OUTPUT);
-  digitalWrite(13, HIGH);
-
   Serial.begin(115200);
-  Serial.println("start BME280 test");
+  Serial.println("start BME280");
 
   bme.begin(0x76); // Adafruit:0x77 SwitchScience:0x76
 }
