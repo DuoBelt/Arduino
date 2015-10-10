@@ -81,7 +81,7 @@ void setup() {
 void loop() {
   tph.updateTPH();
 
-  if (tph.isAvailable && ((tph.counter % 15) == 0)) {
+  if (tph.isAvailable && ((tph.counter % 1) == 0)) {
     String info = String("T=") + tph.T + String(",P=") + tph.P + String(",H=") + tph.H;
     Serial.println(info);
     BTSerial.println(info);
