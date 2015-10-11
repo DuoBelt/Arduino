@@ -46,9 +46,11 @@ SoftwareSerial BTSerial(BT_RX, BT_TX);
 RTC8564 rtc;
 #endif
 
+#if USE_RTC
 void timerHandler()
 {
 }
+#endif
 
 void setup() {
   Serial.begin(115200);
