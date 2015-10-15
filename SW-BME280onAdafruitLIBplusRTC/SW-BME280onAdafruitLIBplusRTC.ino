@@ -1,6 +1,6 @@
-#define INTERVAL_SECS (3)
+#define INTERVAL_SECS (60)
 #define USE_LED true
-#define USE_RTC true
+#define USE_RTC false
 #define USE_BT true
 
 #if USE_BT
@@ -87,7 +87,7 @@ void loop() {
   float T = bme.readTemperature();
   float P = bme.readPressure() / 100.0F;
   float H = bme.readHumidity();
-  String info = String("T=") + T + String(",P=") + P + String(",H=") + H;
+  String info = String("T=") + T + String(" P=") + P + String(" H=") + H;
   Serial.println(info);
 #if USE_BT
   BTSerial.println(info);
