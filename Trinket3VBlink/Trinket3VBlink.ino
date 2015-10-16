@@ -33,7 +33,7 @@ void loop() {
   digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
   Serial.println("LOW!");
   delay(10);
-  delayWDT(5);
+  delayWDT(6);
 }
 
 // ------------------------------------------------------
