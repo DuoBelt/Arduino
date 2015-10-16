@@ -1,63 +1,47 @@
-static int anodePin[3];
-static int cathodePin[8];
-unsigned int counter;
+/*
+   本スケッチはアノードコモンの3桁+n7セグLED(てかDPがあるので8セグだ)をPro Trinketでドライブするサンプルである。
+   だがそもそもArduinoで7セグのダイナミック点灯をしようとすると、使うピンが多過ぎて(8+桁数)LEDコントローラみたいになってしまう。
+   なのでこれはあくまで「arduinoでもできる」レベルなもんであって、実際にやるもんじゃない。
+*/
+
+static int aPin[] = {A0, A1, A2}; // コモン各桁(アノード)はA0から
+static int cPin[] = {3, 4, 5, 6, 8, 9, 10, 11}; // 各セグメントの制御は余剰Dピンで
+
+static unsigned int numA = sizeof(aPin) / sizeof(int);
+unsigned int counter = 0;
 
 void setup() {
+  int *p;
+  int b;
 
-  pinMode(3, OUTPUT);
-  pinMode(4, OUTPUT);
-  pinMode(5, OUTPUT);
-
-  anodePin[0] = 3;
-  anodePin[1] = 4;
-  anodePin[2] = 5;
-
-  pinMode(6,OUTPUT);
-  pinMode(8,OUTPUT);
-  pinMode(9,OUTPUT);
-  pinMode(10,OUTPUT);
-  pinMode(11,OUTPUT);
-  pinMode(12,OUTPUT);
-  pinMode(13,OUTPUT);
-  pinMode(A0,OUTPUT);
-
-  cathodePin[0] = 6;
-  cathodePin[1] = 8;
-  cathodePin[2] = 9;
-  cathodePin[3] = 10;
-  cathodePin[4] = 11;
-  cathodePin[5] = 12;
-  cathodePin[6] = 13;
-  cathodePin[7] = A0;
-  
   Serial.begin(115200);
 
-  counter = 0;
+  for (p = aPin, b = numA; b--; ) {
+    pinMode(*p++, OUTPUT);
+  }
+
+  for (p = cPin, b = 8; b--;) {
+    pinMode(*p++, OUTPUT);
+  }
 
   allOFF();
-  //  allON();
 }
 
 void loop() {
-  unsigned int dst = counter % 4;
-
-  if(dst == 3){
-    allOFF();
-  } 
-  else{
-   for (int a = 0; a < 3; a++) {
-      digitalWrite(anodePin[a], a==dst);
-    }
-    outDigit(dst);
-    
+  int *p;
+  int b;
+  unsigned int focus = counter % numA;
+  for (a = 0, p = aPin, b = numA; b--; p++, a++) {
+    digitalWrite(*p, a == focus);
   }
+  outDigit(focus);
 
   delay(1000 / 1000);
   counter++;
 }
 
 void outDigit(int value) {
-  static const unsigned char digitCodeMap[] = {
+  static const unsigned char bitPattern[] = {
     B00111111, // 0
     B00000110, // 1
     B01011011, // 2
@@ -68,34 +52,23 @@ void outDigit(int value) {
     B00000111, // 7
     B01111111, // 8
     B01101111, // 9
-    B00000000, // BLANK
-    B01000000
-  }; // DASH
+  };
 
-  //  Serial.println(value);
-  unsigned char src = digitCodeMap[value];
+  unsigned char src = bitPattern[value];
   int a;
   int b;
-  unsigned char bit = 1;
-  for (a = 8, b = 0; a--; b++, bit <<= 1) {
-    int cPin = cathodePin[b];
-    digitalWrite(cPin,src&bit);
-  }
-}
-
-void allON() {
-  Serial.println("ON!");
-  for (int a = 0; a < 8; a++) {
-    int cPin = cathodePin[a];
-    digitalWrite(cPin,HIGH);
+  unsigned char bitPos = 1;
+  for (a = 8, b = 0; a--; b++, bitPos <<= 1) {
+    int tPin = cPin[b];
+    digitalWrite(tPin, src & bitPos);
   }
 }
 
 void allOFF() {
   Serial.println("----");
   for (int a = 0; a < 8; a++) {
-    int cPin = cathodePin[a];
-    digitalWrite(cPin,LOW);
+    int tPin = cPin[a];
+    digitalWrite(tPin, LOW);
   }
 }
 

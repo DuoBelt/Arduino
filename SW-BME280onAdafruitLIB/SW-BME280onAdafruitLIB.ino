@@ -86,9 +86,11 @@ void loop() {
     Serial.println(info);
     BTSerial.println(info);
     delay(10);
-
   }
-  delayWDT(8);
+
+  for(int a=0; a<15; a++){
+    delayWDT(6);
+  }
 }
 //
 void delayWDT(unsigned long t) {        // パワーダウンモードでdelayを実行
