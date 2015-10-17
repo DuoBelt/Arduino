@@ -1,13 +1,14 @@
 #include <Adafruit_NeoPixel.h>
 
-#include <MsTimer2.h>
-
 #ifdef __AVR__
 #include <avr/power.h>
 #endif
 
+#define LED_VALUE_MAX 0xFF
+
 #define NP_DIN_PIN 4
 #define NP_LED_COUNT 12
+
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NP_LED_COUNT, NP_DIN_PIN, NEO_GRB + NEO_KHZ800);
 
 //
@@ -30,37 +31,31 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NP_LED_COUNT, NP_DIN_PIN, NEO_GRB + 
 
 #define NP_DIN_PIN 4
 
-#define ENV_COLLECTION_WIDTH 10
+#define ENV_COLLECTION_WIDTH 5
 
-static int isGateOpen;
-static int lastVU;
+static int isGateOpen = 0;
+static int lastVU = 0;
 static int envCollection[ENV_COLLECTION_WIDTH];
 static int *epC;
 static int *epS;
 static int *epE;
 
-static unsigned char valueRGB[3];
-#define OffsetR 0
-#define OffsetG 1
-#define OffsetB 2
-
+static unsigned char RGB[] = {0,0,0};
+ 
 void checkTheGate() {
-  int value = analogRead(SD_GATE_PIN);
+  int value = digitalRead(SD_GATE_PIN);
   isGateOpen = value;
+  Serial.println(value);
   return;
 }
 
 void setup() {
   Serial.begin(115200);
 
-  isGateOpen = 0;
-  lastVU = 0;
   memset(envCollection, 0, sizeof(envCollection));
   epS = &envCollection[0];
   epE = &envCollection[ENV_COLLECTION_WIDTH];
   epC = epS;
-
-  memset(valueRGB,0,sizeof(valueRGB));
 
   pinMode(SD_GATE_PIN, INPUT);
   pinMode(EQ_RESET_PIN, OUTPUT);
@@ -70,15 +65,40 @@ void setup() {
   attachInterrupt(SD_GATE_IRQ, checkTheGate, CHANGE);
 
   strip.begin();
-  strip.show();
+  strip.setBrightness(0x7F);
 
   return;
 }
 
-void updateNP(int pos) {
+void updateRGB(){
+  int bandValue[7];
+
+  bandValue[0] = random(1024);
+  bandValue[1] = random(1024);
+  bandValue[2] = random(1024);
+  bandValue[3] = random(1024);
+  bandValue[4] = random(1024);
+  bandValue[5] = random(1024);
+  bandValue[6] = random(1024);
+
+  RGB[0] = (unsigned char)((bandValue[0]+bandValue[1])/(4*2));
+  RGB[1] = (unsigned char)((bandValue[2]+bandValue[3]+bandValue[4])/(4*3));
+  RGB[2] = (unsigned char)((bandValue[5]+bandValue[6])/(4*2));
+
+//  if(pos){
+//    strip.setBrightness(0xFF/pos);
+//  }
+//  
+//  String info = "R: "+String(R)+" "+"G: "+String(G)+" "+"B: "+String(B);
+//  Serial.println(info);
+//  delay(5);
+}
+
+void updatePOS(int pos) {
   int a;
+
   for (a=0; a<pos; a++) {
-    strip.setPixelColor(a,strip.Color(0xFF, 0xFF, 0xFF));
+    strip.setPixelColor(a,strip.Color(RGB[0],RGB[1],RGB[2]));
   }
   for( ; a<NP_LED_COUNT; a++){
     strip.setPixelColor(a,strip.Color(0x00, 0x00, 0x00));
@@ -88,7 +108,7 @@ void updateNP(int pos) {
   return;
 }
 
-void checkEnvelope(int env) {
+int checkEnvelope(int env) {
   int avg;
   int *p;
 
@@ -102,24 +122,66 @@ void checkEnvelope(int env) {
   }
   avg /= ENV_COLLECTION_WIDTH;
 
-  // refresh strip
-  int thisVU = avg / NP_LED_COUNT;
-  if (thisVU != lastVU) {
-    updateNP(thisVU);
-
-
-    lastVU = thisVU;
-  }
-  return;
+  return(avg / NP_LED_COUNT);
 }
 
 void loop() {
   if (isGateOpen) {
     int env = analogRead(SD_ENV_PIN); // read envelope value
-    checkEnvelope(env);
+    int thisVU = checkEnvelope(env);
+    if (thisVU != lastVU) {
+      updateRGB();
+      updatePOS(thisVU);
+
+
+      lastVU = thisVU;
+    }
   }
   else {
-
+    updatePOS(0);
   }
-  delay(1000 / 100);
+//  delay(1000 / 100);
+  delayWDT(1);
 }
+// ---------------------------------------------------------------------
+#include<avr/sleep.h>
+#include <avr/wdt.h>
+
+void delayWDT(unsigned long t) {        // パワーダウンモードでdelayを実行
+  delayWDT_setup(t);                    // ウォッチドッグタイマー割り込み条件設定
+  ADCSRA &= ~(1 << ADEN);               // ADENビットをクリアしてADCを停止（120μA節約）
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);  // パワーダウンモード
+  sleep_enable();
+
+  sleep_mode();                         // ここでスリープに入る
+
+  sleep_disable();                      // WDTがタイムアップでここから動作再開
+  ADCSRA |= (1 << ADEN);                // ADCの電源をON (|=が!=になっていたバグを修正2014/11/17)
+}
+// ---------------------------------------------------------------------
+void delayWDT_setup(unsigned int ii) {  // ウォッチドッグタイマーをセット。
+  // 引数はWDTCSRにセットするWDP0-WDP3の値。設定値と動作時間は概略下記
+  // 0=16ms, 1=32ms, 2=64ms, 3=128ms, 4=250ms, 5=500ms
+  // 6=1sec, 7=2sec, 8=4sec, 9=8sec
+  byte bb;
+  if (ii > 9 ) {                        // 変な値を排除
+    ii = 9;
+  }
+  bb = ii & 7;                          // 下位3ビットをbbに
+  if (ii > 7) {                         // 7以上（7.8,9）なら
+    bb |= (1 << 5);                     // bbの5ビット目(WDP3)を1にする
+  }
+  bb |= ( 1 << WDCE );
+
+  MCUSR &= ~(1 << WDRF);                // MCU Status Reg. Watchdog Reset Flag ->0
+  // start timed sequence
+  WDTCSR |= (1 << WDCE) | (1 << WDE);   // ウォッチドッグ変更許可（WDCEは4サイクルで自動リセット）
+  // set new watchdog timeout value
+  WDTCSR = bb;                          // 制御レジスタを設定
+  WDTCSR |= _BV(WDIE);
+}
+// ---------------------------------------------------------------------
+ISR(WDT_vect) {                         // WDTがタイムアップした時に実行される処理
+  //  wdt_cycle++;                        // 必要ならコメントアウトを外す
+}
+
