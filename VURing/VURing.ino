@@ -88,9 +88,26 @@ void updateRGB() {
     bandValue[a] = adc.analogRead(a);
   }
 
-  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1]) / (1 * 2));
-  RGB[1] = (unsigned char)((bandValue[2] + bandValue[3]) / (1 * 2));
-  RGB[2] = (unsigned char)((bandValue[4] + bandValue[5]) / (1 * 2));
+  RGB[0] = (unsigned char)(( bandValue[0]) / (1 * 1));
+
+  int ooo = 0;
+  for(a=1; a<5; a++){
+    int ppp;
+    if((ppp = bandValue[a])>ooo){
+      ooo = ppp;    
+    }
+  }
+  RGB[1] = ooo;
+ 
+  RGB[2] = (unsigned char)(( bandValue[5]) / (1 * 1));
+//
+//  RGB[0] = (unsigned char)((bandValue[0]>bandValue[1]? bandValue[0]:bandValue[1]) / (1 * 1));
+//  RGB[1] = (unsigned char)((bandValue[2]>bandValue[3]? bandValue[2]:bandValue[3]) / (1 * 1));
+//  RGB[2] = (unsigned char)((bandValue[4]>bandValue[5]? bandValue[4]:bandValue[5]) / (1 * 1));
+//
+//  RGB[0] = (unsigned char)((bandValue[0]) / (1 * 1));
+//  RGB[1] = (unsigned char)((bandValue[1] + bandValue[2] + bandValue[3] + bandValue[4]) / (1 * 4));
+//  RGB[2] = (unsigned char)(( bandValue[5]) / (1 * 1));
 
 //  RGB[0] = (unsigned char)(bandValue[0] / (1 * 1));
 //  RGB[1] = (unsigned char)((bandValue[1] + bandValue[2] + bandValue[3] + bandValue[4]) / (1 * 4));
@@ -104,6 +121,7 @@ void updateRGB() {
   //    strip.setBrightness(0xFF/pos);
   //  }
   //
+
   //  String info = "R: "+String(R)+" "+"G: "+String(G)+" "+"B: "+String(B);
   //  Serial.println(info);
   //  delay(5);
@@ -157,7 +175,7 @@ void loop() {
     updatePOS(0);
   }
 //  delay(1000 / 100);
-  delayWDT(1);
+  delayWDT(0);
 }
 // ---------------------------------------------------------------------
 #include<avr/sleep.h>
