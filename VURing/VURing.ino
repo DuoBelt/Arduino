@@ -1,3 +1,5 @@
+#include <MCP3208.h>
+#include <SPI.h>
 #include <Adafruit_NeoPixel.h>
 
 #ifdef __AVR__
@@ -10,6 +12,8 @@
 #define NP_LED_COUNT 12
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NP_LED_COUNT, NP_DIN_PIN, NEO_GRB + NEO_KHZ800);
+
+MCP3208 adc(10);
 
 //
 // VURing --- VU + Spectrum analyzer on Neopixel
@@ -40,8 +44,9 @@ static int *epC;
 static int *epS;
 static int *epE;
 
-static unsigned char RGB[] = {0,0,0};
- 
+static unsigned char RGB[] = {0, 0, 0};
+static int offValue;
+
 void checkTheGate() {
   int value = digitalRead(SD_GATE_PIN);
   isGateOpen = value;
@@ -65,45 +70,56 @@ void setup() {
   attachInterrupt(SD_GATE_IRQ, checkTheGate, CHANGE);
 
   strip.begin();
-  strip.setBrightness(0x7F);
+  strip.setBrightness(0x3F);
+//  strip.setBrightness(0x7F);
+  //  strip.setBrightness(0xFF);
+  offValue = strip.Color(0, 0, 0);
+
+  adc.begin();
 
   return;
 }
 
-void updateRGB(){
-  int bandValue[7];
+void updateRGB() {
+  int a;
+  int bandValue[6];
 
-  bandValue[0] = random(1024);
-  bandValue[1] = random(1024);
-  bandValue[2] = random(1024);
-  bandValue[3] = random(1024);
-  bandValue[4] = random(1024);
-  bandValue[5] = random(1024);
-  bandValue[6] = random(1024);
+  for(a=0; a<6; a++){
+    bandValue[a] = adc.analogRead(a);
+  }
 
-  RGB[0] = (unsigned char)((bandValue[0]+bandValue[1])/(4*2));
-  RGB[1] = (unsigned char)((bandValue[2]+bandValue[3]+bandValue[4])/(4*3));
-  RGB[2] = (unsigned char)((bandValue[5]+bandValue[6])/(4*2));
+  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1]) / (1 * 2));
+  RGB[1] = (unsigned char)((bandValue[2] + bandValue[3]) / (1 * 2));
+  RGB[2] = (unsigned char)((bandValue[4] + bandValue[5]) / (1 * 2));
 
-//  if(pos){
-//    strip.setBrightness(0xFF/pos);
-//  }
-//  
-//  String info = "R: "+String(R)+" "+"G: "+String(G)+" "+"B: "+String(B);
-//  Serial.println(info);
-//  delay(5);
+//  RGB[0] = (unsigned char)(bandValue[0] / (1 * 1));
+//  RGB[1] = (unsigned char)((bandValue[1] + bandValue[2] + bandValue[3] + bandValue[4]) / (1 * 4));
+//  RGB[2] = (unsigned char)(bandValue[5] / (1 * 1));
+
+//  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1] + bandValue[2]) / (1 * 3));
+//  RGB[1] = (unsigned char)((bandValue[3] + bandValue[4]) / (1 * 2));
+//  RGB[2] = (unsigned char)(bandValue[5] / (1 * 1));
+
+  //  if(pos){
+  //    strip.setBrightness(0xFF/pos);
+  //  }
+  //
+  //  String info = "R: "+String(R)+" "+"G: "+String(G)+" "+"B: "+String(B);
+  //  Serial.println(info);
+  //  delay(5);
 }
 
 void updatePOS(int pos) {
   int a;
+  int onValue = strip.Color(RGB[0], RGB[1], RGB[2]);
 
-  for (a=0; a<pos; a++) {
-    strip.setPixelColor(a,strip.Color(RGB[0],RGB[1],RGB[2]));
+  for (a = 0; a < pos; a++) {
+    strip.setPixelColor(a, onValue);
   }
-  for( ; a<NP_LED_COUNT; a++){
-    strip.setPixelColor(a,strip.Color(0x00, 0x00, 0x00));
+  for ( ; a < NP_LED_COUNT; a++) {
+    strip.setPixelColor(a, offValue);
   }
-  
+
   strip.show();
   return;
 }
@@ -122,7 +138,7 @@ int checkEnvelope(int env) {
   }
   avg /= ENV_COLLECTION_WIDTH;
 
-  return(avg / NP_LED_COUNT);
+  return (avg / NP_LED_COUNT);
 }
 
 void loop() {
