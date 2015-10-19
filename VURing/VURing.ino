@@ -50,7 +50,7 @@ static int offValue;
 void checkTheGate() {
   int value = digitalRead(SD_GATE_PIN);
   isGateOpen = value;
-  Serial.println(value);
+//  Serial.println(value);
   return;
 }
 
