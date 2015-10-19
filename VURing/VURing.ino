@@ -1,3 +1,22 @@
+//
+// VURing --- VU + Spectrum analyzer on Neopixel
+//
+// Sound Detector::Gate -> Trinket::D3(INT)
+// Sound Detector::Envelope -> Trinket::A0
+// Sound Detector::Audio -> MM-3830:: LINE(L)
+// Sound Detector::R7 <- PotentioMeter(Gain)
+// MM-3830::F01 -> MCP3208::CH0
+// MM-3830::F02 -> MCP3208::CH1
+// MM-3830::F03 -> MCP3208::CH2
+// MM-3830::F04 -> MCP3208::CH3
+// MM-3830::F05 -> MCP3208::CH4
+// MM-3830::F06 -> MCP3208::CH5
+// MCP3208::CS <- Trinket::D10 (SPI)
+// MCP3208::Din <- Trinket::D11 (SPI)
+// MCP3208::Dout -> Trinket::D12 (SPI)
+// MCP3208::CLK <- Trinket::D13 (SPI)
+// Neopixel::DATA <- Trinket::D4
+
 #include <MCP3208.h>
 #include <SPI.h>
 #include <Adafruit_NeoPixel.h>
@@ -11,34 +30,18 @@
 #define NP_DIN_PIN 4
 #define NP_LED_COUNT 12
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NP_LED_COUNT, NP_DIN_PIN, NEO_GRB + NEO_KHZ800);
-
-MCP3208 adc(10);
-
-//
-// VURing --- VU + Spectrum analyzer on Neopixel
-//
-// Sound Detector::Gate -> Trinket::D3(INT)
-// Sound Detector::Envelope -> Trinket::A0
-// Sound Detector::Audio -> MSGEQ7::Audio
-// MSGEQ7::Strobe <- Trinket::D5
-// MSGEQ7::Reset <- Trinket::D6
-// Neopixel::DATA <- Trinket::D4
-
 #define SD_GATE_PIN 3 // Notice! INT-1
 #define SD_GATE_IRQ 1
 #define SD_ENV_PIN A0
-
-#define EQ_OUT_PIN A1
-#define EQ_RESET_PIN 5
-#define EQ_STROBE_PIN 6
-
 #define NP_DIN_PIN 4
+#define SPI_PIN 10
 
 #define ENV_COLLECTION_WIDTH 5
 
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NP_LED_COUNT, NP_DIN_PIN, NEO_GRB + NEO_KHZ800);
+MCP3208 mcp3208(SPI_PIN);
+
 static int isGateOpen = 0;
-static int lastVU = 0;
 static int envCollection[ENV_COLLECTION_WIDTH];
 static int *epC;
 static int *epS;
@@ -48,9 +51,7 @@ static unsigned char RGB[] = {0, 0, 0};
 static int offValue;
 
 void checkTheGate() {
-  int value = digitalRead(SD_GATE_PIN);
-  isGateOpen = value;
-//  Serial.println(value);
+  isGateOpen = digitalRead(SD_GATE_PIN);
   return;
 }
 
@@ -63,59 +64,60 @@ void setup() {
   epC = epS;
 
   pinMode(SD_GATE_PIN, INPUT);
-  pinMode(EQ_RESET_PIN, OUTPUT);
-  pinMode(EQ_STROBE_PIN, OUTPUT);
   pinMode(NP_DIN_PIN, OUTPUT);
+  pinMode(SPI_PIN, OUTPUT);
 
   attachInterrupt(SD_GATE_IRQ, checkTheGate, CHANGE);
 
   strip.begin();
   strip.setBrightness(0x3F);
-//  strip.setBrightness(0x7F);
+  //  strip.setBrightness(0x7F);
   //  strip.setBrightness(0xFF);
   offValue = strip.Color(0, 0, 0);
 
-  adc.begin();
+  mcp3208.begin();
 
   return;
 }
 
 void updateRGB() {
   int a;
+  int b;
+  int *p;
   int bandValue[6];
 
-  for(a=0; a<6; a++){
-    bandValue[a] = adc.analogRead(a);
+  for (a = 0, b = 6, p = bandValue; b--; a++) {
+    *p++ = mcp3208.analogRead(a); // analogRead() returns unsigned 16bit integer
   }
 
-  RGB[0] = (unsigned char)(( bandValue[0]) / (1 * 1));
+  RGB[0] = (unsigned char)(( bandValue[0]) / (8 * 1));
 
   int ooo = 0;
-  for(a=1; a<5; a++){
+  for (a = 1; a < 5; a++) {
     int ppp;
-    if((ppp = bandValue[a])>ooo){
-      ooo = ppp;    
+    if ((ppp = bandValue[a]) > ooo) {
+      ooo = ppp;
     }
   }
-  RGB[1] = ooo;
- 
-  RGB[2] = (unsigned char)(( bandValue[5]) / (1 * 1));
-//
-//  RGB[0] = (unsigned char)((bandValue[0]>bandValue[1]? bandValue[0]:bandValue[1]) / (1 * 1));
-//  RGB[1] = (unsigned char)((bandValue[2]>bandValue[3]? bandValue[2]:bandValue[3]) / (1 * 1));
-//  RGB[2] = (unsigned char)((bandValue[4]>bandValue[5]? bandValue[4]:bandValue[5]) / (1 * 1));
-//
-//  RGB[0] = (unsigned char)((bandValue[0]) / (1 * 1));
-//  RGB[1] = (unsigned char)((bandValue[1] + bandValue[2] + bandValue[3] + bandValue[4]) / (1 * 4));
-//  RGB[2] = (unsigned char)(( bandValue[5]) / (1 * 1));
+  RGB[1] = ooo / (8 * 1);
 
-//  RGB[0] = (unsigned char)(bandValue[0] / (1 * 1));
-//  RGB[1] = (unsigned char)((bandValue[1] + bandValue[2] + bandValue[3] + bandValue[4]) / (1 * 4));
-//  RGB[2] = (unsigned char)(bandValue[5] / (1 * 1));
+  RGB[2] = (unsigned char)(( bandValue[5]) / (8 * 1));
+  //
+  //  RGB[0] = (unsigned char)((bandValue[0]>bandValue[1]? bandValue[0]:bandValue[1]) / (1 * 1));
+  //  RGB[1] = (unsigned char)((bandValue[2]>bandValue[3]? bandValue[2]:bandValue[3]) / (1 * 1));
+  //  RGB[2] = (unsigned char)((bandValue[4]>bandValue[5]? bandValue[4]:bandValue[5]) / (1 * 1));
+  //
+  //  RGB[0] = (unsigned char)((bandValue[0]) / (1 * 1));
+  //  RGB[1] = (unsigned char)((bandValue[1] + bandValue[2] + bandValue[3] + bandValue[4]) / (1 * 4));
+  //  RGB[2] = (unsigned char)(( bandValue[5]) / (1 * 1));
 
-//  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1] + bandValue[2]) / (1 * 3));
-//  RGB[1] = (unsigned char)((bandValue[3] + bandValue[4]) / (1 * 2));
-//  RGB[2] = (unsigned char)(bandValue[5] / (1 * 1));
+  //  RGB[0] = (unsigned char)(bandValue[0] / (1 * 1));
+  //  RGB[1] = (unsigned char)((bandValue[1] + bandValue[2] + bandValue[3] + bandValue[4]) / (1 * 4));
+  //  RGB[2] = (unsigned char)(bandValue[5] / (1 * 1));
+
+  //  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1] + bandValue[2]) / (1 * 3));
+  //  RGB[1] = (unsigned char)((bandValue[3] + bandValue[4]) / (1 * 2));
+  //  RGB[2] = (unsigned char)(bandValue[5] / (1 * 1));
 
   //  if(pos){
   //    strip.setBrightness(0xFF/pos);
@@ -129,13 +131,11 @@ void updateRGB() {
 
 void updatePOS(int pos) {
   int a;
+  int b;
   int onValue = strip.Color(RGB[0], RGB[1], RGB[2]);
 
-  for (a = 0; a < pos; a++) {
-    strip.setPixelColor(a, onValue);
-  }
-  for ( ; a < NP_LED_COUNT; a++) {
-    strip.setPixelColor(a, offValue);
+  for (a = 0, b = NP_LED_COUNT; b--; a++) {
+    strip.setPixelColor(a, a < pos ? onValue : offValue);
   }
 
   strip.show();
@@ -160,22 +160,19 @@ int checkEnvelope(int env) {
 }
 
 void loop() {
+  int waitParam;
   if (isGateOpen) {
-    int env = analogRead(SD_ENV_PIN); // read envelope value
-    int thisVU = checkEnvelope(env);
-    if (thisVU != lastVU) {
-      updateRGB();
-      updatePOS(thisVU);
+    int thisVU = checkEnvelope(analogRead(SD_ENV_PIN)); // read envelope value
+    updateRGB();
+    updatePOS(thisVU);
 
-
-      lastVU = thisVU;
-    }
+    waitParam = 0;
   }
   else {
+    waitParam = 9;
     updatePOS(0);
   }
-//  delay(1000 / 100);
-  delayWDT(0);
+  delayWDT(waitParam);
 }
 // ---------------------------------------------------------------------
 #include<avr/sleep.h>
