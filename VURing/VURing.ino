@@ -1,4 +1,4 @@
-#define USE_BRIGHTNESS false
+#define USE_BRIGHTNESS true
 
 //
 // VURing --- VU + Spectrum analyzer on Neopixel
@@ -55,7 +55,7 @@ static int *epE;
 
 static unsigned char RGB[] = {0, 0, 0};
 static int offValue;
-static unsigned char brightness = 0xFF;
+static unsigned char brightness = LED_VALUE_MAX;
 
 void checkTheGate() {
   isGateOpen = digitalRead(SD_GATE_PIN);
@@ -79,8 +79,6 @@ void setup() {
   attachInterrupt(SD_GATE_IRQ, checkTheGate, CHANGE);
 
   strip.begin();
-  //  strip.setBrightness(0x3F);
-  //  strip.setBrightness(0x7F);
   strip.setBrightness(brightness);
   offValue = strip.Color(0, 0, 0);
 
@@ -96,7 +94,7 @@ void updateRGB() {
   int bandValue[6];
 
   for (a = 0, b = 6, p = bandValue; b--; a++) {
-    *p++ = mcp3208.analogRead(a); // analogRead() returns unsigned 16bit integer
+    *p++ = mcp3208.analogRead(a); // analogRead() returns unsigned 12bit integer
   }
 
   RGB[0] = (unsigned char)((bandValue[0] + bandValue[1]) / (4 * 2));
