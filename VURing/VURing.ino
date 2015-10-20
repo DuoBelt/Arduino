@@ -1,3 +1,5 @@
+#define USE_BRIGHTNESS false
+
 //
 // VURing --- VU + Spectrum analyzer on Neopixel
 //
@@ -36,6 +38,10 @@
 #define NP_DIN_PIN 4
 #define SPI_PIN 10
 
+#if USE_BRIGHTNESS
+#define BRIGHTNESS_PIN A1 // future use for NeoPixel
+#endif
+
 #define ENV_COLLECTION_WIDTH 5
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NP_LED_COUNT, NP_DIN_PIN, NEO_GRB + NEO_KHZ800);
@@ -49,6 +55,7 @@ static int *epE;
 
 static unsigned char RGB[] = {0, 0, 0};
 static int offValue;
+static unsigned char brightness = 0xFF;
 
 void checkTheGate() {
   isGateOpen = digitalRead(SD_GATE_PIN);
@@ -66,13 +73,15 @@ void setup() {
   pinMode(SD_GATE_PIN, INPUT);
   pinMode(NP_DIN_PIN, OUTPUT);
   pinMode(SPI_PIN, OUTPUT);
-
+#if USE_BRIGHTNESS
+  pinMode(BRIGHTNESS_PIN, INPUT);
+#endif
   attachInterrupt(SD_GATE_IRQ, checkTheGate, CHANGE);
 
   strip.begin();
-  strip.setBrightness(0x3F);
+  //  strip.setBrightness(0x3F);
   //  strip.setBrightness(0x7F);
-  //  strip.setBrightness(0xFF);
+  strip.setBrightness(brightness);
   offValue = strip.Color(0, 0, 0);
 
   mcp3208.begin();
@@ -163,6 +172,13 @@ void loop() {
   int waitParam;
   if (isGateOpen) {
     int thisVU = checkEnvelope(analogRead(SD_ENV_PIN)); // read envelope value
+#if USE_BRIGHTNESS
+    unsigned char bValue = (unsigned char)(analogRead(BRIGHTNESS_PIN) / 4);
+    if(bValue != brightness){
+      brightness = bValue;
+      strip.setBrightness(brightness);
+    }
+#endif
     updateRGB();
     updatePOS(thisVU);
 
