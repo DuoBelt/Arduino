@@ -99,22 +99,22 @@ void updateRGB() {
     *p++ = mcp3208.analogRead(a); // analogRead() returns unsigned 16bit integer
   }
 
-  RGB[0] = (unsigned char)(( bandValue[0]) / (4 * 1));
+  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1]) / (4 * 2));
+  RGB[1] = (unsigned char)((bandValue[2] + bandValue[3]) / (4 * 2));
+  RGB[2] = (unsigned char)((bandValue[4] + bandValue[5]) / (4 * 2));
 
-  int ooo = 0;
-  for (a = 1; a < 5; a++) {
-    int ppp;
-    if ((ppp = bandValue[a]) > ooo) {
-      ooo = ppp;
-    }
-  }
-  RGB[1] = ooo / (4 * 1);
-
-  RGB[2] = (unsigned char)(( bandValue[5]) / (4 * 1));
+  //  RGB[0] = (unsigned char)(( bandValue[0]) / (4 * 1));
   //
-  //  RGB[0] = (unsigned char)((bandValue[0]>bandValue[1]? bandValue[0]:bandValue[1]) / (1 * 1));
-  //  RGB[1] = (unsigned char)((bandValue[2]>bandValue[3]? bandValue[2]:bandValue[3]) / (1 * 1));
-  //  RGB[2] = (unsigned char)((bandValue[4]>bandValue[5]? bandValue[4]:bandValue[5]) / (1 * 1));
+  //  int ooo = 0;
+  //  for (a = 1; a < 5; a++) {
+  //    int ppp;
+  //    if ((ppp = bandValue[a]) > ooo) {
+  //      ooo = ppp;
+  //    }
+  //  }
+  //  RGB[1] = ooo / (4 * 1);
+  //
+  //  RGB[2] = (unsigned char)(( bandValue[5]) / (4 * 1));
   //
   //  RGB[0] = (unsigned char)((bandValue[0]) / (1 * 1));
   //  RGB[1] = (unsigned char)((bandValue[1] + bandValue[2] + bandValue[3] + bandValue[4]) / (1 * 4));
@@ -174,7 +174,7 @@ void loop() {
     int thisVU = checkEnvelope(analogRead(SD_ENV_PIN)); // read envelope value
 #if USE_BRIGHTNESS
     unsigned char bValue = (unsigned char)(analogRead(BRIGHTNESS_PIN) / 4);
-    if(bValue != brightness){
+    if (bValue != brightness) {
       brightness = bValue;
       strip.setBrightness(brightness);
     }
