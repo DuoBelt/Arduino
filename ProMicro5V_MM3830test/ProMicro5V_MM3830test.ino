@@ -42,6 +42,14 @@ void cyclePoint() {
 #if USE_CONSOLE
   Serial.println("");
 #endif
+//  unsigned char R = (level[0] + level[1] + level[2]) / (4 * 3);
+//  unsigned char G = (level[3] + level[4]) / (4 * 2);
+//  unsigned char B = (level[5]) / (4 * 1);
+
+//  unsigned char R = (level[0]) / (4 * 1);
+//  unsigned char G = (level[1] + level[2] + level[3] + level[4]) / (4 * 4);
+//  unsigned char B = (level[5]) / (4 * 1);
+
   unsigned char R = (level[0] + level[1]) / (4 * 2);
   unsigned char G = (level[2] + level[3]) / (4 * 2);
   unsigned char B = (level[4] + level[5]) / (4 * 2);
