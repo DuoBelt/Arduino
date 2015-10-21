@@ -1,19 +1,23 @@
 #include <stdio.h>
 
-static int waitMS = 1000/4;
+static int waitMS = 1000/1;
+static int RXLED = 17;
 
 void setup()
 {
-  Serial.begin(115200); //This pipes to the serial monitor
+  while(!Serial);
+  
+  Serial.begin(115200);
+  pinMode(RXLED,OUTPUT);
 }
 
 void loop()
 {
   Serial.println("Hi!");
-  RXLED1;
+  digitalWrite(RXLED,LOW);
   TXLED0;
   delay(waitMS);
-  RXLED0;
+  digitalWrite(RXLED,HIGH);
   TXLED1;
   delay(waitMS);
 }
