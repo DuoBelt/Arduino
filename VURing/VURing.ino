@@ -97,10 +97,13 @@ void updateRGB() {
     *p++ = mcp3208.analogRead(a); // analogRead() returns unsigned 12bit integer
   }
 
-  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1]) / (4 * 2));
-  RGB[1] = (unsigned char)((bandValue[2] + bandValue[3]) / (4 * 2));
-  RGB[2] = (unsigned char)((bandValue[4] + bandValue[5]) / (4 * 2));
+  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1] + bandValue[2]) / (4 * 3));
+  RGB[1] = (unsigned char)((bandValue[3] + bandValue[4]) / (4 * 2));
+  RGB[2] = (unsigned char)((bandValue[5]) / (4 * 1));
 
+//  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1]) / (4 * 2));
+//  RGB[1] = (unsigned char)((bandValue[2] + bandValue[3]) / (4 * 2));
+//  RGB[2] = (unsigned char)((bandValue[4] + bandValue[5]) / (4 * 2));
   //  RGB[0] = (unsigned char)(( bandValue[0]) / (4 * 1));
   //
   //  int ooo = 0;
