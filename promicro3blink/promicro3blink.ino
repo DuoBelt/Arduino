@@ -24,17 +24,18 @@ void setup()
   // TX LED is set as an output behind the scenes
 
   while (!Serial);
-  Serial.begin(115200); //This pipes to the serial monitor
-  Serial1.begin(115200); //This is the UART, pipes to sensors attached to board
+  Serial.begin(115200);
+//  Serial.begin(115200); //This pipes to the serial monitor
+//  Serial1.begin(115200); //This is the UART, pipes to sensors attached to board
 
   Serial.println("Start blink");
 }
 
-#define WM 1000/1
+#define WM 1000/10
 
 void loop()
 {
-  Serial.println("Hello world !!");  // Print "Hello World" to the Serial Monitor
+  Serial.println(WM);  // Print "Hello World" to the Serial Monitor
   // Serial1.println("Hello!");  // Print "Hello!" over hardware UART
 
   digitalWrite(RXLED, LOW);   // set the LED on

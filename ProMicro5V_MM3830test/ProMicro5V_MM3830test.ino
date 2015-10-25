@@ -1,4 +1,4 @@
-#define USE_CONSOLE false
+#define USE_CONSOLE true
 
 #include <MsTimer2.h>
 
@@ -25,13 +25,13 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(12, PIN, NEO_GRB + NEO_KHZ800);
 // on a live circuit...if you must, connect GND first.
 
 static int colorValue = 0;
-static int bandPins[] = {A7, A9, A6, A8, A0, A1};
+static int bandPins[] = {A0, A1, A2, A3, A6, A7};
 
 void cyclePoint() {
   int a;
-  int level[6];
+  int level[7];
 
-  for (a = 0; a < 6; a++) {
+  for (a = 0; a < 7; a++) {
     int val = analogRead(bandPins[a]);
 #if USE_CONSOLE
     Serial.print(val);
