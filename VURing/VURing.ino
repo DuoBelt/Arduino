@@ -1,3 +1,4 @@
+#define CAVG false
 #define USE_BRIGHTNESS true
 
 //
@@ -42,19 +43,28 @@
 #define BRIGHTNESS_PIN A1 // future use for NeoPixel
 #endif
 
-#define ENV_COLLECTION_WIDTH 5
+#define SAMPLINGS 8
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NP_LED_COUNT, NP_DIN_PIN, NEO_GRB + NEO_KHZ800);
 MCP3208 mcp3208(SPI_PIN);
 
 static int isGateOpen = 0;
-static int envCollection[ENV_COLLECTION_WIDTH];
+static int envCollection[SAMPLINGS];
 static int *epC;
 static int *epS;
 static int *epE;
 
-static unsigned char RGB[] = {0, 0, 0};
-static int offValue;
+
+int onValue = 0;
+int offValue = 0;
+
+#if CAVG
+static int colorCollection[SAMPLINGS];
+static int *cpC;
+static int *cpS;
+static int *cpE;
+#endif
+
 static unsigned char brightness = LED_VALUE_MAX;
 
 void checkTheGate() {
@@ -65,9 +75,16 @@ void checkTheGate() {
 void setup() {
   Serial.begin(115200);
 
+#if CAVG
+  memset(colorCollection, 0, sizeof(colorCollection));
+  cpS = &colorCollection[0];
+  cpE = &colorCollection[SAMPLINGS];
+  cpC = cpS;
+#endif
+
   memset(envCollection, 0, sizeof(envCollection));
   epS = &envCollection[0];
-  epE = &envCollection[ENV_COLLECTION_WIDTH];
+  epE = &envCollection[SAMPLINGS];
   epC = epS;
 
   pinMode(SD_GATE_PIN, INPUT);
@@ -80,11 +97,22 @@ void setup() {
 
   strip.begin();
   strip.setBrightness(brightness);
-  offValue = strip.Color(0, 0, 0);
 
   mcp3208.begin();
 
   return;
+}
+
+int mostHigh(int *p, int count) {
+  int a;
+  int val = 0;
+  for (a = count; a--; ) {
+    int ooo = *p++;
+    if (ooo > val) {
+      val = ooo;
+    }
+  }
+  return (val);
 }
 
 void updateRGB() {
@@ -92,18 +120,28 @@ void updateRGB() {
   int b;
   int *p;
   int bandValue[6];
+  unsigned char RGB[3];
 
   for (a = 0, b = 6, p = bandValue; b--; a++) {
-    *p++ = mcp3208.analogRead(a); // analogRead() returns unsigned 12bit integer
+    *p++ = mcp3208.analogRead(a) * 16; // analogRead() returns unsigned 12bit integer
   }
 
-  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1] + bandValue[2]) / (4 * 3));
-  RGB[1] = (unsigned char)((bandValue[3] + bandValue[4]) / (4 * 2));
-  RGB[2] = (unsigned char)((bandValue[5]) / (4 * 1));
+  //  RGB[0] = (unsigned char)mostHigh(&bandValue[0],3);
+  //  RGB[1] = (unsigned char)mostHigh(&bandValue[2],2);
+  //  RGB[2] = (unsigned char)mostHigh(&bandValue[5],1);
 
-//  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1]) / (4 * 2));
-//  RGB[1] = (unsigned char)((bandValue[2] + bandValue[3]) / (4 * 2));
-//  RGB[2] = (unsigned char)((bandValue[4] + bandValue[5]) / (4 * 2));
+  //  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1] + bandValue[2]) / (4 * 3));
+  //  RGB[1] = (unsigned char)((bandValue[3] + bandValue[4]) / (4 * 2));
+  //  RGB[2] = (unsigned char)((bandValue[5]) / (4 * 1));
+
+  RGB[0] = (unsigned char)((bandValue[0]+bandValue[1])/2);
+  RGB[1] = (unsigned char)((bandValue[2]+bandValue[3])/2);
+  RGB[2] = (unsigned char)((bandValue[4]+bandValue[5])/2);
+
+//  RGB[0] = (unsigned char)((bandValue[0] + bandValue[1]) / (1 * 2));
+//  RGB[1] = (unsigned char)((bandValue[2] + bandValue[3]) / (1 * 2));
+//  RGB[2] = (unsigned char)((bandValue[4] + bandValue[5]) / (1 * 2));
+
   //  RGB[0] = (unsigned char)(( bandValue[0]) / (4 * 1));
   //
   //  int ooo = 0;
@@ -137,12 +175,28 @@ void updateRGB() {
   //  String info = "R: "+String(R)+" "+"G: "+String(G)+" "+"B: "+String(B);
   //  Serial.println(info);
   //  delay(5);
+
+  int val = strip.Color(RGB[0], RGB[1], RGB[2]);
+#if CAVG
+  int avg;
+  *cpC++ = val;
+  if (cpC == cpE) {
+    cpC = cpS;
+  }
+  for (avg = 0, p = cpS; p < cpE; ) {
+    avg += *p++;
+  }
+  avg /= SAMPLINGS;
+  val = avg;
+ #endif 
+
+  onValue = val;
 }
 
 void updatePOS(int pos) {
   int a;
   int b;
-  int onValue = strip.Color(RGB[0], RGB[1], RGB[2]);
+  //  int onValue = strip.Color(RGB[0], RGB[1], RGB[2]);
 
   for (a = 0, b = NP_LED_COUNT; b--; a++) {
     strip.setPixelColor(a, a < pos ? onValue : offValue);
@@ -164,7 +218,7 @@ int checkEnvelope(int env) {
   for (avg = 0, p = epS; p < epE; ) {
     avg += *p++;
   }
-  avg /= ENV_COLLECTION_WIDTH;
+  avg /= SAMPLINGS;
 
   return (avg / NP_LED_COUNT);
 }
