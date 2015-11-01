@@ -1,3 +1,5 @@
+#define USE_TICKER false
+
 /*
 
 Copyright (c) 2015, Embedded Adventures
@@ -37,10 +39,26 @@ THE POSSIBILITY OF SUCH DAMAGE.
 // BME280 MOD-1022 weather multi-sensor Arduino demo
 // Written originally by Embedded Adventures
 
+#include <ESP8266WiFi.h>
 #include <BME280_MOD-1022.h>
-
 #include <Wire.h>
+#if USE_TICKER
+#include <Ticker.h>
+#endif
+extern "C" {
+#include "user_interface.h"
+}
 
+
+#if USE_TICKER
+Ticker ticker;
+unsigned int counter = 0;
+
+void cyclePoint() {
+  digitalWrite(16, counter % 2);
+  counter++;
+}
+#endif
 // Arduino needs this to pring pretty numbers
 
 void printFormattedFloat(float x, uint8_t precision) {
@@ -69,53 +87,78 @@ void printCompensatedMeasurements(void) {
   tempMostAccurate     = BME280.getTemperatureMostAccurate();
   humidityMostAccurate = BME280.getHumidityMostAccurate();
   pressureMostAccurate = BME280.getPressureMostAccurate();
-  Serial.println("                Good  Better    Best");
-  Serial.print("Temperature  ");
-  printFormattedFloat(temp, 2);
-  Serial.print("         ");
-  printFormattedFloat(tempMostAccurate, 2);
-  Serial.println();
+  //  Serial.println("                Good  Better    Best");
+  //  Serial.print("Temperature  ");
+  //  printFormattedFloat(temp, 2);
+  //  Serial.print("         ");
+  //  printFormattedFloat(tempMostAccurate, 2);
+  //  Serial.println();
+  //
+  //  Serial.print("Humidity     ");
+  //  printFormattedFloat(humidity, 2);
+  //  Serial.print("         ");
+  //  printFormattedFloat(humidityMostAccurate, 2);
+  //  Serial.println();
+  //
+  //  Serial.print("Pressure     ");
+  //  printFormattedFloat(pressure, 2);
+  //  Serial.print(" ");
+  //  printFormattedFloat(pressureMoreAccurate, 2);
+  //  Serial.print(" ");
+  //  printFormattedFloat(pressureMostAccurate, 2);
+  //  Serial.println();
 
-  Serial.print("Humidity     ");
-  printFormattedFloat(humidity, 2);
-  Serial.print("         ");
-  printFormattedFloat(humidityMostAccurate, 2);
-  Serial.println();
+  String nickname = "sekitakovich";
+  String info = "t=" + String(tempMostAccurate) + "&h=" +  String(humidityMostAccurate) + "&p=" + String(pressureMostAccurate) + "&v=0" + "&nickname=" + nickname;
+  Serial.println(info);
 
-  Serial.print("Pressure     ");
-  printFormattedFloat(pressure, 2);
-  Serial.print(" ");
-  printFormattedFloat(pressureMoreAccurate, 2);
-  Serial.print(" ");
-  printFormattedFloat(pressureMostAccurate, 2);
-  Serial.println();
+  const char* host = "www.klabo.co.jp";
+  WiFiClient client;
+  const int httpPort = 80;
+  if (client.connect(host, httpPort)) {
+    String url = String("/tph.php?")  + info;
+    client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
+    while (client.available()) {
+      String line = client.readStringUntil('\r');
+      Serial.print(line);
+    }
+  }
 }
-
-
-// setup wire and serial
 
 void setup()
 {
+  const char* ssid     = "ms101";
+  const char* password = "sekitakovich";
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
   Wire.begin();
   Serial.begin(115200);
-}
 
-// main loop
+  //    wifi_set_sleep_type(NONE_SLEEP_T);
+  //    wifi_set_sleep_type(MODEM_SLEEP_T);
 
-void loop()
-{
-  Serial.println("loop!");
-  
-  uint8_t chipID;
+  wifi_set_sleep_type(LIGHT_SLEEP_T);
+
+#if USE_TICKER
+  pinMode(16, OUTPUT);
+  ticker.attach(1.0, cyclePoint);
+#endif
+  //
+  //  uint8_t chipID;
 
   Serial.println("Welcome to the BME280 MOD-1022 weather multi-sensor test sketch!");
   Serial.println("Embedded Adventures (www.embeddedadventures.com)");
-  chipID = BME280.readChipId();
+
+  //  chipID = BME280.readChipId();
 
   // find the chip ID out just for fun
-  Serial.print("ChipID = 0x");
-  Serial.print(chipID, HEX);
-
+  //  Serial.print("ChipID = 0x");
+  //  Serial.print(chipID, HEX);
 
   // need to read the NVM compensation parameters
   BME280.readCompensationParams();
@@ -134,21 +177,21 @@ void loop()
   Serial.println("Done!");
 
   // read out the data - must do this before calling the getxxxxx routines
-  BME280.readMeasurements();
-  Serial.print("Temp=");
-  Serial.println(BME280.getTemperature());  // must get temp first
-  Serial.print("Humidity=");
-  Serial.println(BME280.getHumidity());
-  Serial.print("Pressure=");
-  Serial.println(BME280.getPressure());
-  Serial.print("PressureMoreAccurate=");
-  Serial.println(BME280.getPressureMoreAccurate());  // use int64 calculcations
-  Serial.print("TempMostAccurate=");
-  Serial.println(BME280.getTemperatureMostAccurate());  // use double calculations
-  Serial.print("HumidityMostAccurate=");
-  Serial.println(BME280.getHumidityMostAccurate()); // use double calculations
-  Serial.print("PressureMostAccurate=");
-  Serial.println(BME280.getPressureMostAccurate()); // use double calculations
+  //  BME280.readMeasurements();
+  //  Serial.print("Temp=");
+  //  Serial.println(BME280.getTemperature());  // must get temp first
+  //  Serial.print("Humidity=");
+  //  Serial.println(BME280.getHumidity());
+  //  Serial.print("Pressure=");
+  //  Serial.println(BME280.getPressure());
+  //  Serial.print("PressureMoreAccurate=");
+  //  Serial.println(BME280.getPressureMoreAccurate());  // use int64 calculcations
+  //  Serial.print("TempMostAccurate=");
+  //  Serial.println(BME280.getTemperatureMostAccurate());  // use double calculations
+  //  Serial.print("HumidityMostAccurate=");
+  //  Serial.println(BME280.getHumidityMostAccurate()); // use double calculations
+  //  Serial.print("PressureMostAccurate=");
+  //  Serial.println(BME280.getPressureMostAccurate()); // use double calculations
 
   // Example for "indoor navigation"
   // We'll switch into normal mode for regular automatic samples
@@ -161,20 +204,21 @@ void loop()
 
   BME280.writeMode(smNormal);
 
-  while (1) {
+  //
+}
 
-
-    while (BME280.isMeasuring()) {
-
-
-    }
-
-    // read out the data - must do this before calling the getxxxxx routines
-    BME280.readMeasurements();
-    printCompensatedMeasurements();
-
-    delay(5000);	// do this every 5 seconds
-    Serial.println();
+void loop()
+{
+  //  Serial.println("loop!");
+  while (BME280.isMeasuring()) {
+    delay(1);
   }
+
+  // read out the data - must do this before calling the getxxxxx routines
+  BME280.readMeasurements();
+  printCompensatedMeasurements();
+
+  delay(1000*60);	// do this every 5 seconds
+  //  Serial.println();
 }
 
