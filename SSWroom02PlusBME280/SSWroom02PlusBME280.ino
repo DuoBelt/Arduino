@@ -1,5 +1,3 @@
-#define USE_TICKER false
-
 /*
 
 Copyright (c) 2015, Embedded Adventures
@@ -42,24 +40,9 @@ THE POSSIBILITY OF SUCH DAMAGE.
 #include <ESP8266WiFi.h>
 #include <BME280_MOD-1022.h>
 #include <Wire.h>
-#if USE_TICKER
-#include <Ticker.h>
-#endif
 extern "C" {
 #include "user_interface.h"
 }
-
-
-#if USE_TICKER
-Ticker ticker;
-unsigned int counter = 0;
-
-void cyclePoint() {
-  digitalWrite(16, counter % 2);
-  counter++;
-}
-#endif
-// Arduino needs this to pring pretty numbers
 
 void printFormattedFloat(float x, uint8_t precision) {
   char buffer[10];
@@ -125,6 +108,11 @@ void printCompensatedMeasurements(void) {
   }
 }
 
+static unsigned int counter = 0;
+void onTouch() {
+  counter++;
+  digitalWrite(13, (counter) % 2);
+}
 void setup()
 {
   const char* ssid     = "ms101";
@@ -144,11 +132,9 @@ void setup()
 
   wifi_set_sleep_type(LIGHT_SLEEP_T);
 
+  pinMode(0, INPUT);
   pinMode(13, OUTPUT);
-#if USE_TICKER
-  pinMode(16, OUTPUT);
-  ticker.attach(1.0, cyclePoint);
-#endif
+  attachInterrupt(0, onTouch, FALLING);
   //
   //  uint8_t chipID;
 
@@ -215,15 +201,10 @@ void loop()
     delay(1);
   }
 
-  // read out the data - must do this before calling the getxxxxx routines
-  digitalWrite(13,HIGH);
-  delay(1000*1);
-  digitalWrite(13,LOW);
-
   BME280.readMeasurements();
   printCompensatedMeasurements();
 
-  delay(1000*60);	// do this every 5 seconds
+  delay(1000 * 60);	// do this every 5 seconds
   //  Serial.println();
 }
 
