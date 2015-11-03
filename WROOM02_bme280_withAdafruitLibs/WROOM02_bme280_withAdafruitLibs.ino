@@ -36,7 +36,7 @@ void setup() {
 void loop() {
   float t = bme.readTemperature();
   float p = bme.readPressure() / 100.0F;
-  float h =  bme.readHumidity();
+  float h = bme.readHumidity();
   float v = 0.0;
 
   digitalWrite(LEDPIN,HIGH);
@@ -51,6 +51,9 @@ void loop() {
   if (client.connect(host, httpPort)) {
     String url = String("/tph.php?")  + info;
     client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
+
+    delay(10);
+    
     while (client.available()) {
       String line = client.readStringUntil('\r');
       Serial.print(line);
