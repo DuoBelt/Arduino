@@ -9,7 +9,7 @@ extern "C" {
 
 Adafruit_BME280 bme; // I2C
 
-#define DELAYMS (1000 * 60 * 3)
+#define DELAYMS (1000 * 60 * 1)
 #define LEDPIN (13)
 
 void setup() {
