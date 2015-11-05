@@ -16,8 +16,8 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Start collection");
 
-  pinMode(LEDPIN,OUTPUT);
-  
+  pinMode(LEDPIN, OUTPUT);
+
   char *ssid = "ms101";
   char *password = "sekitakovich";
 
@@ -25,7 +25,7 @@ void setup() {
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
-    delay(1000*1);
+    delay(1000 * 1);
     Serial.print(".");
   }
   Serial.println("");
@@ -39,8 +39,11 @@ void loop() {
   float h = bme.readHumidity();
   float v = 0.0;
 
-  digitalWrite(LEDPIN,HIGH);
+  int adcv =  system_adc_read(); // from TOUT (4.2V - 470K - 150K - GND)
+  v = (float)adcv / (1024/4.2);
   
+  digitalWrite(LEDPIN, HIGH);
+
   String nickname = "sekitakovich";
   String info = "t=" + String(t) + "&h=" +  String(h) + "&p=" + String(p) + "&v=" + String(v) + "&nickname=" + nickname;
   Serial.println(info);
@@ -53,14 +56,14 @@ void loop() {
     client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
 
     delay(10);
-    
+
     while (client.available()) {
       String line = client.readStringUntil('\r');
       Serial.print(line);
     }
   }
 
-  digitalWrite(LEDPIN,LOW);
-  
+  digitalWrite(LEDPIN, LOW);
+
   delay(DELAYMS);
 }
