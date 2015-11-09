@@ -15,27 +15,29 @@ Ticker ticker;
 #define LEDPIN (13)
 
 #define VS 10
+
+String thisMAC = "";
 static unsigned int upCount = 0L;
 
 static unsigned int counter = 0;
 static float vSamples[VS] = {0};
 static float voltage = 0.0;
 
-void measureVoltage(){
+void measureVoltage() {
   unsigned int a;
   float sum = 0.0;
   int adcv =  system_adc_read(); // from TOUT (4.2V - 470K - 150K - GND)
-  float v = (float)adcv / (1024/4.2);
+  float v = (float)adcv / (1024 / 4.2);
 
-  vSamples[counter%VS] = v;
+  vSamples[counter % VS] = v;
   counter++;
-  unsigned int ooo = (counter<VS? counter:VS);
-  for(a=0; a<ooo; a++){
-    sum += vSamples[a];    
+  unsigned int ooo = (counter < VS ? counter : VS);
+  for (a = 0; a < ooo; a++) {
+    sum += vSamples[a];
   }
   voltage = sum / ooo;
 
-  String info = "+" + String(v) + "V (avg " + String(voltage) +")";
+  String info = "+" + String(v) + "V (avg " + String(voltage) + ")";
   Serial.println(info);
 }
 
@@ -49,6 +51,18 @@ void setup() {
   char *password = "sekitakovich";
 
   wifi_set_sleep_type(LIGHT_SLEEP_T);
+
+  unsigned char MAC_STA[6];
+  unsigned char *MAC  = WiFi.macAddress(MAC_STA);
+
+  thisMAC =
+    String(MAC[0], HEX) + ":" +
+    String(MAC[1], HEX) + ":" +
+    String(MAC[2], HEX) + ":" +
+    String(MAC[3], HEX) + ":" +
+    String(MAC[4], HEX) + ":" +
+    String(MAC[5], HEX);
+  Serial.println(thisMAC);
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -68,17 +82,17 @@ void loop() {
   float t = bme.readTemperature();
   float p = bme.readPressure() / 100.0F;
   float h = bme.readHumidity();
-//  float v = 0.0;
-//
-//  int adcv =  system_adc_read(); // from TOUT (4.2V - 470K - 150K - GND)
-//  v = (float)adcv / (1024/4.2);
+  //  float v = 0.0;
+  //
+  //  int adcv =  system_adc_read(); // from TOUT (4.2V - 470K - 150K - GND)
+  //  v = (float)adcv / (1024/4.2);
 
   float v = voltage;
-  
+
   digitalWrite(LEDPIN, HIGH);
 
   String nickname = "sekitakovich";
-  String info = "t=" + String(t) + "&h=" +  String(h) + "&p=" + String(p) + "&v=" + String(v) + "&nickname=" + nickname + "&up="+ upCount++;
+  String info = "t=" + String(t) + "&h=" +  String(h) + "&p=" + String(p) + "&v=" + String(v) + "&mac=" + thisMAC + "&up=" + upCount++;
   Serial.println(info);
 
   char *host = "www.klabo.co.jp";
