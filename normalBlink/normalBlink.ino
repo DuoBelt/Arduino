@@ -13,7 +13,7 @@
   by Scott Fitzgerald
  */
 
-#define PIN (4)
+#define PIN (13)
 #define DMS (1000/4)
 
 // the setup function runs once when you press reset or power the board

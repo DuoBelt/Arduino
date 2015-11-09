@@ -1,3 +1,8 @@
+#include <ESP8266WiFi.h>
+extern "C" {
+#include "user_interface.h"
+}
+
 /***************************************************************************
   This is a library for the BME280 humidity, temperature & pressure sensor
 
@@ -44,6 +49,7 @@ void setup() {
     Serial.println("Could not find a valid BME280 sensor, check wiring!");
     while (1);
   }
+  wifi_set_sleep_type(LIGHT_SLEEP_T);
 }
 
 void loop() {
