@@ -5,6 +5,7 @@
 //
 //  Pro Trinket Wiring ...
 //  D3 <--- tactile switch (PULL-UP)
+//  D4 ---> TCS34725::LED pin
 //  D5 <--- Bluetooth RX
 //  D6 ---> Bluetooth TX
 //  A4 ---> I2C - SDA
@@ -14,12 +15,11 @@
 #include <avr/sleep.h>
 #include <SoftwareSerial.h>
 
-#define BLUETOOTH_RX 5
-#define BLUETOOTH_TX 6
-
 #define TACTILE_SW_PIN 3
 #define WHITELED_PIN 4
-#define VIBRATOR_PIN 8
+
+#define BLUETOOTH_RX 5
+#define BLUETOOTH_TX 6
 
 SoftwareSerial SWSerial(BLUETOOTH_RX,BLUETOOTH_TX);
 
@@ -153,14 +153,14 @@ void setup() {
   attachInterrupt(1,checkButton,CHANGE);
 
   pinMode(WHITELED_PIN,OUTPUT);
-  pinMode(VIBRATOR_PIN,OUTPUT);
-
   digitalWrite(WHITELED_PIN, LOW);
+
   rgb_sensor.begin();
 }
 
 static int pushCounter = 0;
 static int readCounter = 0;
+
 void checkButton(){
   if(digitalRead(TACTILE_SW_PIN) == LOW){
 //    digitalWrite(WHITELED_PIN,HIGH);
@@ -284,6 +284,4 @@ void delayWDT_setup(unsigned int ii) {  // ウォッチドッグタイマーを�
 ISR(WDT_vect) {                         // WDTがタイムアップした時に実行される処理
   //  wdt_cycle++;                        // 必要ならコメントアウトを外す
 }
-
-
 
