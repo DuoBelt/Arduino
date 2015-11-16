@@ -23,5 +23,5 @@ void setup() {
 
 void loop() {
   Serial.println("loop");
-  delay(1000);
+  delay(1000*2);
 }
