@@ -1,3 +1,6 @@
+#define TPIN 0
+#define TLED 13
+
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
   #include <avr/power.h>
@@ -19,6 +22,11 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, PIN, NEO_GRB + NEO_KHZ800);
 // and minimize distance between Arduino and first pixel.  Avoid connecting
 // on a live circuit...if you must, connect GND first.
 
+void intercept() {
+  bool pin = digitalRead(TPIN);
+  digitalWrite(TLED, !pin);
+}
+
 void setup() {
   // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
   #if defined (__AVR_ATtiny85__)
@@ -29,6 +37,11 @@ void setup() {
 
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
+
+  pinMode(TPIN, INPUT);
+  pinMode(TLED, OUTPUT);
+
+  attachInterrupt(TPIN, intercept, CHANGE);
 }
 
 void loop() {
