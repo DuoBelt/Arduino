@@ -112,7 +112,7 @@ void loop() {
   digitalWrite(LEDPIN, HIGH);
 
   String nickname = "sekitakovich";
-  String info = "t=" + String(t) + "&h=" +  String(h) + "&p=" + String(p) + "&v=" + String(v) + "&mac=" + thisMAC + "&up=" + upCount++ + "&spv=" + String(loadvoltage) + "&spa=" + String(current_mA);
+  String info = "t=" + String(t) + "&h=" +  String(h) + "&p=" + String(p) + "&v=" + String(v,3) + "&mac=" + thisMAC + "&up=" + upCount++ + "&spv=" + String(loadvoltage,3) + "&spa=" + String(current_mA,3);
   Serial.println(info);
 
   char *host = "www.klabo.co.jp";
