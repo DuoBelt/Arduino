@@ -43,6 +43,7 @@ void setup() {
 
 
   strip.begin();
+  strip.setBrightness(0xFF);
   strip.show(); // Initialize all pixels to 'off'
 
   pinMode(TPIN, INPUT);
