@@ -14,7 +14,6 @@ Adafruit_BME280 bme; // I2C
 Adafruit_INA219 ina219; // ina219
 Ticker ticker;
 
-#define DELAYMS (1000 * 60 * 1)
 #define LEDPIN (13)
 
 #define VS 10
@@ -25,6 +24,9 @@ static unsigned int upCount = 0L;
 static unsigned int counter = 0;
 static float vSamples[VS] = {0};
 static float voltage = 0.0;
+static float lastSendV = 0.0;
+
+static int delayMS = 1000*10;
 
 void measureVoltage() {
   unsigned int a;
@@ -83,7 +85,7 @@ void setup() {
 }
 
 void loop() {
-  delay(DELAYMS);
+  delay(delayMS);
   //
   float shuntvoltage = 0;
   float busvoltage = 0;
@@ -108,6 +110,10 @@ void loop() {
   //  v = (float)adcv / (1024/4.2);
 
   float v = voltage;
+
+  delayMS = 1000*((voltage>lastSendV)? 5:60);
+  
+  lastSendV = voltage;
 
   digitalWrite(LEDPIN, HIGH);
 
