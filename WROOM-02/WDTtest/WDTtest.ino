@@ -1,6 +1,6 @@
 #include <ESP8266WiFi.h>
 
-// WDT 全然動いてくんないし ...
+// WDT 全然動いてくんないし、resetもrestartもよくわからんし
 
 static int counter = 0;
 
