@@ -183,11 +183,20 @@ void loop() {
 }
 
 void sendColorData() {
-  readCounter++;
   digitalWrite(WHITELED_PIN,HIGH);
   rgb_sensor.getData();
   digitalWrite(WHITELED_PIN,LOW);
-  SWSerial.println(readCounter);
+//
+//  SWSerial.println(readCounter);
+
+  static char *text[] = {
+    "助けてー",
+    "SOS",
+    "メーデーメーデー",
+  };
+  SWSerial.println(text[readCounter%(sizeof(text)/sizeof(char *))]);
+
+  readCounter++;
 //
   Serial.print(F("Gain:")); 
   Serial.print(rgb_sensor.againx); 
