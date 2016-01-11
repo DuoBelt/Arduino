@@ -15,8 +15,8 @@
 #define BLUETOOTH_RX 5
 #define BLUETOOTH_TX 6
 
-#define TACTILE_SW_PIN 9
-#define WHITELED_PIN 13
+#define TACTILE_SW_PIN 3
+#define WHITELED_PIN 4
 #define VIBRATOR_PIN 8
 
 SoftwareSerial SWSerial(BLUETOOTH_RX,BLUETOOTH_TX);
@@ -40,11 +40,14 @@ void setup() {
 
   pinMode(WHITELED_PIN,OUTPUT);
   pinMode(VIBRATOR_PIN,OUTPUT);
-}
 
+  Serial.println("Let's go!");
+}
+  
 static int pushCounter = 0;
 static int readCounter = 0;
 void checkButton(){
+  Serial.println("Hi!");
   if(digitalRead(TACTILE_SW_PIN) == LOW){
     digitalWrite(WHITELED_PIN,HIGH);
     pushCounter++;
@@ -55,7 +58,8 @@ void checkButton(){
 }
 
 void loop() {
-  delayWDT(6);
+//  delayWDT(6);
+  delay(1000);
   if(pushCounter){
 //    Serial.println(pushCounter);
     pushCounter = 0;
@@ -94,6 +98,7 @@ void sendColorData() {
     delay(10);
     SWSerial.println(readCounter);
   }
+  else Serial.println("why?");
   Wire.endTransmission();
 }
 
