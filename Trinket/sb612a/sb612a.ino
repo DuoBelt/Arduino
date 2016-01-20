@@ -1,3 +1,6 @@
+/*
+ * PIRをINTで使うの図
+*/
 #include <avr/sleep.h>
 
 #define PIN_LED 13
@@ -5,7 +8,7 @@
 
 void sensorEvent(){
   int value = digitalRead(PIN_PIR);
-  digitalWrite(PIN_LED, value? HIGH:LOW);
+  digitalWrite(PIN_LED, value);
 }
 
 void setup() {
