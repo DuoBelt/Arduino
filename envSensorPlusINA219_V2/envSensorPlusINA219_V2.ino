@@ -31,8 +31,8 @@ void setup() {
 
   pinMode(LEDPIN, OUTPUT);
 
-  char *ssid = "ms101";
-  char *password = "sekitakovich";
+  const char ssid[] = "ms101";
+  const char password[] = "sekitakovich";
 
   wifi_set_sleep_type(LIGHT_SLEEP_T);
 
@@ -48,12 +48,14 @@ void setup() {
     String(MAC[5], HEX);
   Serial.println(thisMAC);
 
+  digitalWrite(LEDPIN, HIGH);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000 * 1);
     Serial.print(".");
   }
   Serial.println("");
+  digitalWrite(LEDPIN, LOW);
 
   bme.begin(0x76);
   Serial.println("Measuring T:P:H with BME280.");
@@ -99,7 +101,7 @@ void loop() {
   String info = "t=" + String(t) + "&h=" +  String(h) + "&p=" + String(p) + "&v=" + String(v,3) + "&mac=" + thisMAC + "&up=" + upCount++ + "&spv=" + String(loadvoltage,3) + "&spa=" + String(current_mA,3);
   Serial.println(info);
 
-  char *host = "www.klabo.co.jp";
+  const char host[] = "www.klabo.co.jp";
   WiFiClient client;
   int httpPort = 80;
   if (client.connect(host, httpPort)) {
