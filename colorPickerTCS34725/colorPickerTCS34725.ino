@@ -190,11 +190,15 @@ void sendColorData() {
 //  SWSerial.println(readCounter);
 
   static char *text[] = {
-    "助けてー",
+    "Georgia",
     "SOS",
-    "メーデーメーデー",
+    "Hello",
   };
-  SWSerial.println(text[readCounter%(sizeof(text)/sizeof(char *))]);
+
+  char *ppp = text[readCounter%(sizeof(text)/sizeof(char *))];
+
+  Serial.println(ppp);
+  SWSerial.println(ppp);
 
   readCounter++;
 //
