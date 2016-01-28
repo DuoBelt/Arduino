@@ -18,6 +18,18 @@ Ticker ticker;
 
 #define VS 10
 
+class dataBOX {
+  class{
+    double spv;
+    double spa;
+    double v;
+    double t;
+    double h;
+    double p;
+  }buffer[10];
+};
+
+
 String thisMAC = "";
 static unsigned int upCount = 0L;
 
@@ -64,8 +76,6 @@ void setup() {
 }
 
 void loop() {
-  delay(delayMS);
-  //
   float shuntvoltage = 0;
   float busvoltage = 0;
   float current_mA = 0;
@@ -91,10 +101,7 @@ void loop() {
   int adcv =  system_adc_read(); // from TOUT (4.2V - 470K - 150K - GND)
   float v = (float)adcv / (1024 / 4.2);
 
-  delayMS = 1000*((v>lastSendV)? 5:60);
-  
   lastSendV = v;
-
 
   String nickname = "sekitakovich";
   String info = "t=" + String(t) + "&h=" +  String(h) + "&p=" + String(p) + "&v=" + String(v,3) + "&mac=" + thisMAC + "&up=" + upCount++ + "&spv=" + String(loadvoltage,3) + "&spa=" + String(current_mA,3);
