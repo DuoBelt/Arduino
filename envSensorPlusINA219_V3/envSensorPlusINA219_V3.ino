@@ -18,18 +18,6 @@ Ticker ticker;
 
 #define VS 10
 
-class dataBOX {
-  class{
-    double spv;
-    double spa;
-    double v;
-    double t;
-    double h;
-    double p;
-  }buffer[10];
-};
-
-
 String thisMAC = "";
 static unsigned int upCount = 0L;
 
@@ -37,14 +25,52 @@ static float lastSendV = 0.0;
 
 static int delayMS = 1000*10;
 
+bool busyFlag = false;
+
+void cyclePoint(){
+  if(busyFlag == false){
+    float t = 0;
+    float p = 0;
+    float h = 0;
+    float v = 0;
+    float loadvoltage = 0;
+    float current_mA = 0;
+
+    busyFlag = true;
+    
+    String info = "t=" + String(t) + "&h=" +  String(h) + "&p=" + String(p) + "&v=" + String(v,3) + "&mac=" + thisMAC + "&up=" + upCount++ + "&spv=" + String(loadvoltage,3) + "&spa=" + String(current_mA,3);
+  
+    Serial.println(info);
+    const char host[] = "www.klabo.co.jp";
+    WiFiClient client;
+    int httpPort = 80;
+    if (client.connect(host, httpPort)) {
+      digitalWrite(LEDPIN, HIGH);
+      String url = String("/tph.php?")  + info;
+      client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
+  
+      while (client.available()) {
+        String line = client.readStringUntil('\r');
+        Serial.print(line);
+      }
+      digitalWrite(LEDPIN, LOW);
+    }
+    else Serial.println("client???");
+    busyFlag = false;
+  }
+  else{
+    Serial.println("busy!");
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.println("Start collection");
 
   pinMode(LEDPIN, OUTPUT);
 
-  const char ssid[] = "ms101";
-  const char password[] = "sekitakovich";
+  const char ssid[] = "CP6F";
+  const char password[] = "muraponn";
 
   wifi_set_sleep_type(LIGHT_SLEEP_T);
 
@@ -73,6 +99,8 @@ void setup() {
   Serial.println("Measuring T:P:H with BME280.");
   ina219.begin();
   Serial.println("Measuring voltage and current with INA219.");
+
+  ticker.attach(5.0,cyclePoint);
 }
 
 void loop() {
@@ -86,42 +114,14 @@ void loop() {
   current_mA = ina219.getCurrent_mA();
   loadvoltage = busvoltage + (shuntvoltage / 1000);
 
-  Serial.print("Voltage:  "); Serial.print(loadvoltage); Serial.println(" V");
-  Serial.print("Current:       "); Serial.print(current_mA); Serial.println(" mA");
-  Serial.println("");
-  //
   float t = bme.readTemperature();
   float p = bme.readPressure() / 100.0F;
   float h = bme.readHumidity();
-  //  float v = 0.0;
-  //
-  //  int adcv =  system_adc_read(); // from TOUT (4.2V - 470K - 150K - GND)
-  //  v = (float)adcv / (1024/4.2);
 
   int adcv =  system_adc_read(); // from TOUT (4.2V - 470K - 150K - GND)
   float v = (float)adcv / (1024 / 4.2);
 
   lastSendV = v;
 
-  String nickname = "sekitakovich";
-  String info = "t=" + String(t) + "&h=" +  String(h) + "&p=" + String(p) + "&v=" + String(v,3) + "&mac=" + thisMAC + "&up=" + upCount++ + "&spv=" + String(loadvoltage,3) + "&spa=" + String(current_mA,3);
-  Serial.println(info);
-
-  const char host[] = "www.klabo.co.jp";
-  WiFiClient client;
-  int httpPort = 80;
-  if (client.connect(host, httpPort)) {
-    digitalWrite(LEDPIN, HIGH);
-    String url = String("/tph.php?")  + info;
-    client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
-
-    delay(1000);
-
-    while (client.available()) {
-      String line = client.readStringUntil('\r');
-      Serial.print(line);
-    }
-    digitalWrite(LEDPIN, LOW);
-  }
-
+    delay(1000*5);
 }

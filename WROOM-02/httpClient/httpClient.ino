@@ -8,10 +8,17 @@
 ESP8266WiFiMulti WiFiMulti;
 
 void setup() {
-  const char ssid[] = "ms101";
-  const char password[] = "sekitakovich";
+  const char ssid[] = "cp6f";
+  const char password[] = "muraponn";
 
   Serial.begin(115200);
+
+
+
+  delay(1000*3);
+  
+  Serial.println("");
+  Serial.println("Start!");
 
   WiFiMulti.addAP(ssid,password);
 }
@@ -34,6 +41,7 @@ void loop() {
       Serial.print("[HTTP] GET... failed, no connection or no HTTP server\n");
     }
   }
+  else Serial.println("No!");
   delay(1000*10);
 }
 
