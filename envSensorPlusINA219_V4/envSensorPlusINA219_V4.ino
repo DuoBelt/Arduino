@@ -119,9 +119,10 @@ void loop() {
   float h = bme.readHumidity();
 
   int adcv =  system_adc_read(); // from TOUT (4.2V - 470K - 150K - GND)
-  float v = (float)adcv / (1024 / 4.2);
+//  float v = (float)adcv / (1024 / 4.2);
+//
+//  lastSendV = v;
 
-  lastSendV = v;
-
+  lastSendV = loadvoltage;
     delay(1000*5);
 }
