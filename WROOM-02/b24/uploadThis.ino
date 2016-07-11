@@ -4,6 +4,8 @@ int uploadThis(char *host, char *url, int port)
   if (client.connect(host, port)) {
     digitalWrite(LEDPIN, HIGH);
 
+  Serial.println(url);
+
     client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
 
     delay(1000);
