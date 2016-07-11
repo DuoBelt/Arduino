@@ -24,8 +24,6 @@ static unsigned int upCount = 0L;
 static float lastSendV = 0.0;
 static float lastSendA = 0.0;
 
-static int delayMS = 1000 * 10;
-
 void setup() {
   Serial.begin(115200);
   Serial.println("Start collection");

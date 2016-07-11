@@ -12,7 +12,7 @@ void loop() {
   static char host[] = "www.klabo.co.jp";
   char thisURL[0x100];
 
-  delayMS = 1000 * (((loadvoltage > lastSendV) || (current_mA > lastSendA)) ? 5 : 60);
+  bool liteSleep =  ((loadvoltage > lastSendV) || (current_mA > lastSendA));
 
   String getOption = "t=" + String(t) + "&h=" +  String(h) + "&p=" + String(p) + "&mac=" + thisMAC + "&up=" + upCount++ + "&spv=" + String(loadvoltage, 3) + "&spa=" + String(current_mA, 3);
   String getString = String("/tph.php?")  + getOption;
@@ -21,8 +21,15 @@ void loop() {
 
   uploadThis(host, thisURL, 80);
 
-  Serial.println("onto sleep (" + String(delayMS) + ")");
-  delay(delayMS);
+  if(liteSleep){
+    delay(5*1000);
+  }
+  else{
+    Serial.println("Good night!");
+     ESP.deepSleep(60 * 1000 * 1000 , WAKE_RF_DEFAULT);
+     delay(1000);
+  }
+
   lastSendV = loadvoltage;
   lastSendA = current_mA;
 }
