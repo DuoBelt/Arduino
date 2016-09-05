@@ -15,7 +15,7 @@
 #define PIN_RTC_INT (2)
 #define PIN_RTC_NUM (0)
 
-#define INTERVAL_SECS (1*5)
+#define INTERVAL_SECS (1*1)
 
 #define SWSP_RX (8)
 #define SWSP_TX (9)
@@ -33,7 +33,7 @@ volatile unsigned long counter = 0;
 ****************************************************** */
 void timerHandler()
 {
-  counter+=INTERVAL_SECS;
+  counter += INTERVAL_SECS;
 }
 
 /* ******************************************************
@@ -69,22 +69,27 @@ void setup() {
    2nd. loop
 ****************************************************** */
 void loop() {
-//  digitalWrite(PIN_LED, counter % 2);
-  float t = bme.readTemperature();
-  float p = bme.readPressure() / 100.0F;
-  float h = bme.readHumidity();
-  //
-  rtc.now(&thisTime);
-  String tph = String(t) + '/' + String(p) + '/' + String(h);
-  swserial.println(tph);
-  //
-  sensors_event_t event;
-  accel.getEvent(&event);
+  if ((counter % 5) == 0) {
+    digitalWrite(PIN_LED, HIGH);
+    float t = bme.readTemperature();
+    float p = bme.readPressure() / 100.0F;
+    float h = bme.readHumidity();
+    //
+    rtc.now(&thisTime);
+    String tph = String(t) + '/' + String(p) + '/' + String(h);
+    swserial.println(tph);
+    //
+    sensors_event_t event;
+    accel.getEvent(&event);
 
-  swserial.print("X: "); swserial.print(event.acceleration.x); swserial.print("  ");
-  swserial.print("Y: "); swserial.print(event.acceleration.y); swserial.print("  ");
-  swserial.print("Z: "); swserial.print(event.acceleration.z); swserial.print("  "); swserial.println("m/s^2 ");
-  //
-  delay(10); // 次のスリープまでに処理を完了させるための時間稼ぎ
+    swserial.print("X: "); swserial.print(event.acceleration.x); swserial.print("  ");
+    swserial.print("Y: "); swserial.print(event.acceleration.y); swserial.print("  ");
+    swserial.print("Z: "); swserial.print(event.acceleration.z); swserial.print("  "); swserial.println("m/s^2 ");
+    //
+    delay(10); // 次のスリープまでに処理を完了させるための時間稼ぎ
+  }
+  else {
+    digitalWrite(PIN_LED, LOW);
+  }
   sleep_mode(); // zzz ...
 }
