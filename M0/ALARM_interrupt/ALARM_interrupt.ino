@@ -8,47 +8,57 @@ If you want to use a low power oscillator use rtc.begin(TIME_H24, LOW_POWER); fu
 If you want to use a more accurate oscillator use rtc.begin(TIME_H24, HIGH_PRECISION); function.
 ******************************************************************************************************************************************************************************/
 
+volatile bool gotAlarm = false;
 
 #include <RTCInt.h>
 
 RTCInt rtc;
 
-void setup() 
+void setup()
 {
   SerialUSB.begin(115200);       //serial communication initializing
-  pinMode(13,OUTPUT);
+  pinMode(13, OUTPUT);
+
   rtc.begin(TIME_H24);      //RTC initializing with 24 hour representation mode
-  rtc.setTime(17,0,5,0);    //setting time (hour minute and second)
-  rtc.setDate(13,8,15);     //setting date
-  rtc.enableAlarm(SEC,ALARM_INTERRUPT,alarm_int); //enabling alarm in polled mode and match on second
-  rtc.time.hour=17;
-  rtc.time.minute=5;
-  rtc.time.second=10;  //setting second to match
+  rtc.setTime(17, 0, 5, 0); //setting time (hour minute and second)
+  rtc.setDate(13, 8, 15);   //setting date
+  rtc.enableAlarm(SEC, ALARM_INTERRUPT, alarm_int); //enabling alarm in polled mode and match on second
+  rtc.time.hour = 17;
+  rtc.time.minute = 5;
+  rtc.time.second = 10; //setting second to match
   rtc.setAlarm();  //write second in alarm register
+
+    digitalWrite(13, LOW);  //main program code
 }
 
 void loop()
 {
-  digitalWrite(13,HIGH);   //main program code
-  delay(100);
-  digitalWrite(13,LOW);
-  delay(900);
-  
+  if (gotAlarm) {
+    gotAlarm = false;
+    SerialUSB.println("Alarm match!");
+    digitalWrite(13, HIGH);  //main program code
+    delay(1000);
+    digitalWrite(13, LOW);  //main program code
+  }
+  else {
+    delay(1000);
+  }
 }
 
 
 /*************** Interrupt routine for alarm ******************************/
 void alarm_int(void)
 {
-  SerialUSB.println("Alarm match!");
-    for(int i=0; i < 10; i++)
-    {
-      digitalWrite(13,HIGH);
-      //delay(200);
-      for(int j=0; j < 1000000; j++) asm("NOP");  //in interrupt routine you cannot use delay function then an alternative is NOP instruction cicled many time as you need
-      digitalWrite(13,LOW);
-      //delay(800);
-      for(int j=0; j < 2000000; j++) asm("NOP");
-    }
-    RTC->MODE2.INTFLAG.bit.ALARM0=1; //clearing alarm0 flag
-}    
+  gotAlarm = true;
+  //    for(int i=0; i < 10; i++)
+  //    {
+  //      digitalWrite(13,HIGH);
+  //      //delay(200);
+  //      for(int j=0; j < 1000000; j++) asm("NOP");  //in interrupt routine you cannot use delay function then an alternative is NOP instruction cicled many time as you need
+  //      digitalWrite(13,LOW);
+  //      //delay(800);
+  //      for(int j=0; j < 2000000; j++) asm("NOP");
+  //    }
+
+  RTC->MODE2.INTFLAG.bit.ALARM0 = 1; //clearing alarm0 flag
+}
