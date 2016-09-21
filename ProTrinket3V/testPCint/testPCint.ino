@@ -5,11 +5,11 @@
 #define PIN_LED (13)
 #define PIN_TSW (4) // for tactile switch (active HIGH)
 
-volatile bool gotInt = false;
-volatile int lastValue = 0;
+volatile int lastValue = LOW;
 
 void setup() {
   Serial.begin(115200);
+  Serial.println("Start Pin - Change - Interrupts test!");
 
   pinMode(PIN_LED , OUTPUT);
   pinMode(PIN_TSW , INPUT);
@@ -23,24 +23,21 @@ void setup() {
 }
 
 void loop() {
-  if (gotInt) {
-    Serial.println("Good morning, Mr.PCI! " + String(lastValue));
+  if (lastValue) {
+    Serial.println("Good morning, Mr.PCI!");
     digitalWrite(PIN_LED, HIGH);
-    delay(1000);
+    delay(100);
     digitalWrite(PIN_LED, LOW);
-    gotInt = false;
+    lastValue = 0;
   }
   else {
     Serial.println("zzz ...");
     delay(10);
-    sleep_mode();
+    sleep_mode(); // Good night baby .......
   }
 }
 
 ISR(PCINT2_vect) {
   lastValue = digitalRead(PIN_TSW);
-  if (lastValue) {
-    gotInt = true;
-  }
 }
 
