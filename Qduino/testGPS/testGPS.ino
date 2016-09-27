@@ -3,7 +3,7 @@
 #include <avr/sleep.h>
 #include <RTC8564.h>
 
-#define PIN_RTC_INT (15)
+#define PIN_RTC_INT (9)
 #define INTERVAL_SECS (1)
 
 RTC8564 rtc;
@@ -26,11 +26,11 @@ void setup() {
   rtc.begin();
   rtc.setTimer( rtc.TIMING_1_SEC, INTERVAL_SECS, true, true );
 
-  PCMSK0 |= (1 << PCINT1); // on D15
+  PCMSK0 |= (1 << PCINT5); // on D15
   PCICR  |= (1 << PCIE0); // enable PCI
 }
 
-ISR(PCINT0_vect) {
+ISR(PCINT5_vect) {
   if (digitalRead(PIN_RTC_INT) == LOW) {
     counter++;
     gotInterrupt = true;
