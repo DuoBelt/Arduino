@@ -1,4 +1,8 @@
+#include <avr/sleep.h>
+
 void setup() {
+  set_sleep_mode(SLEEP_MODE_IDLE);
+
   while (!Serial) {
     ;
   }
@@ -20,8 +24,11 @@ void loop() {
   char buffer[0x100];
   int length = GPSreadln(buffer);
   if (length) {
-//    Serial.println(buffer);
+    //    Serial.println(buffer);
     checkNMEA(buffer);
+  }
+  else {
+    sleep_mode();
   }
 }
 
@@ -114,9 +121,17 @@ void checkNMEA(char *line) {
     char *vp = ep[2];
     char *dp = ep[9];
     char *tp = ep[1];
+    char *lonP = ep[3];
+    char *latP = ep[5];
+    char *mp = ep[12];
+
+    float lon = atof(lonP);
+    float lat = atof(latP);
+    
     Serial.println(String(vp) + " " + "20" + String(dp).substring(4, 6) + "-" + String(dp).substring(2, 4) + "-" + String(dp).substring(0, 2) + " " + String(tp).substring(0, 2) + ":" + String(tp).substring(2, 4) + ":" + String(tp).substring(4, 6));
+    Serial.println(String(mp) + " lon:lat = [" + String(lon,3) + ":" + String(lat,3) + "]");
   }
-//  Serial.println();
+  //  Serial.println();
 }
 
 
