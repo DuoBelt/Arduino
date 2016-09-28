@@ -1,6 +1,7 @@
 #include <avr/sleep.h>
 
 #define PIN_TSW (9)
+#define PIN_RXLED (17)
 
 // ---------------------------------------------------------------------------------------------------------------
 class NMEA {
@@ -11,7 +12,7 @@ class NMEA {
     float __lat;
 };
 
-NMEA::NMEA(){
+NMEA::NMEA() {
   __lon = 0.0;
   __lat = 0.0;
 }
@@ -29,7 +30,9 @@ void setup() {
   Serial.begin(115200);
 
   Serial1.begin(9600);
+
   pinMode(PIN_TSW, INPUT_PULLUP);
+  pinMode(PIN_RXLED, OUTPUT);
 
   set_sleep_mode(SLEEP_MODE_IDLE);
 
@@ -43,7 +46,13 @@ volatile bool tako = false;
 ISR(PCINT0_vect) {
   if (digitalRead(PIN_TSW) == LOW) {
     counter++;
-    tako = true;
+    if (tako == false) {
+      tako = true;
+      digitalWrite(PIN_RXLED, HIGH);
+    }
+    else {
+      digitalWrite(PIN_RXLED, LOW);
+    }
   }
 }
 
@@ -51,7 +60,9 @@ void loop() {
   char buffer[0x100];
   int length = GPSreadln(buffer);
 
+  //  digitalWrite(PIN_RXLED, HIGH);
   checkNMEA(buffer);
+  //  digitalWrite(PIN_RXLED, LOW);
   //  Serial.println(buffer);
 
   //  int bytes = Serial1.available();
@@ -64,7 +75,9 @@ void loop() {
     Serial.println(counter);
   }
   else {
+    TXLED1;
     //    delay(1000);
     sleep_mode();
+    TXLED0;
   }
 }
