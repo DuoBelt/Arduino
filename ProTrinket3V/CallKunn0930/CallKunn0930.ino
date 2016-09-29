@@ -1,4 +1,7 @@
+#include <Wire.h>
 #include <SoftwareSerial.h>
+
+#define ATP_I2C (0x2e) // AquestTalk pico
 
 #define SS_RX (5)
 #define SS_TX (6)
@@ -21,15 +24,17 @@ unsigned int counter = 0;
 byte volumeA = 0;
 byte volumeI = 0;
 #else
-#define ACT_TH (60)
+#define ACT_TH (255)
 byte volumeA = ACT_TH;
 byte volumeI = ACT_TH;
 #endif
 
-#define PIN_LED (13)
+#define PIN_LED (4) // on TCS34725
 
 void setup() {
 
+  Wire.begin();
+  
   Serial.begin(115200);
   Serial.println("check the ACTIVITY start!");
 
@@ -96,6 +101,13 @@ void loop() {
         counter++;
         Serial.println("Activity " + String(counter));
         ss.println(counter);
+// Why? Why? Why?
+        Wire.beginTransmission(ATP_I2C);
+        Wire.write("Wao");
+        delay(100);
+        Wire.write('\r');
+        Wire.endTransmission();        
+//
         delay(10);
       }
       digitalWrite(PIN_LED, LOW);
