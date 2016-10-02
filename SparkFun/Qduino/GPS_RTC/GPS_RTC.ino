@@ -5,9 +5,11 @@
 #include "Qduino.h"
 #include <RTC8564.h>
 
+#define PIN_LED (13)
 #define PIN_RTC_INT (15)
 #define INTERVAL_SECS (1)
 
+qduino Qres; // Qduino resources
 fuelGauge battery;  // initialize the library
 RTC8564 rtc;
 
@@ -16,6 +18,7 @@ volatile unsigned int counter = 0;
 
 ISR(PCINT0_vect) {
   if (digitalRead(PIN_RTC_INT) == LOW) {
+    digitalWrite(PIN_LED, counter % 2);
     counter++;
     gotInterrupt = true;
   }
@@ -23,12 +26,17 @@ ISR(PCINT0_vect) {
 
 void setup() {
   Wire.begin();
+  Qres.setup();
   battery.setup();  // setup fuel gauge
 
+  Qres.setRGB("pink");
+
+  pinMode(PIN_LED, OUTPUT);
   pinMode(PIN_RTC_INT, INPUT_PULLUP);
   rtc.begin();
   rtc.setTimer( rtc.TIMING_1_SEC, INTERVAL_SECS, true, true );
   PCMSK0 |= (1 << PCINT1); // on D15
+  //  PCMSK0 |= (1 << PCINT4); // on D8
   PCICR  |= (1 << PCIE0); // enable PCI
 
   set_sleep_mode(SLEEP_MODE_IDLE);
@@ -71,51 +79,57 @@ void loop() {
 
 int GPSreadln(char *buffer) {
   int length = 0;
-  char checkSum = 0;
-  bool loop = true;
-  bool isChar = true;
-  char sumb[3];
-  char *cp = sumb;
 
-  while (loop) {
-    int bytes = Serial1.available();
-    while (bytes--) {
-      char c = Serial1.read();
-      //      Serial.print(c);
-      switch (c) {
-        case '$':
-          break;
-        case '*':
-          isChar = false;
-          break;
-        case 0x0d:
-          break;
-        case 0x0a:
-          *cp = 0;
-          *buffer = 0;
-          loop = false;
-          break;
-        default:
-          if (isChar) {
-            checkSum ^= c;
-            *buffer++ = c;
-            length++;
-          }
-          else {
-            *cp++ = c;
-          }
-          break;
+  if (Serial1.available()) {
+    char checkSum = 0;
+    bool loop = true;
+    bool isChar = true;
+    char sumb[3];
+    char *cp = sumb;
+
+    while (loop) {
+      int bytes = Serial1.available();
+      while (bytes--) {
+        char c = Serial1.read();
+        //      Serial.print(c);
+        switch (c) {
+          case '$':
+            break;
+          case '*':
+            isChar = false;
+            break;
+          case 0x0d:
+            break;
+          case 0x0a:
+            *cp = 0;
+            *buffer = 0;
+            loop = false;
+            break;
+          default:
+            if (isChar) {
+              checkSum ^= c;
+              *buffer++ = c;
+              length++;
+            }
+            else {
+              *cp++ = c;
+            }
+            break;
+        }
       }
     }
+
+    char gotSum;
+    sscanf(sumb, "%x", &gotSum);
+
+    //  Serial.println(gotSum, HEX);
+    //  Serial.println(checkSum, HEX);
+
+    if (checkSum != gotSum) {
+      length = 0;
+    }
   }
-
-  char gotSum;
-  sscanf(sumb, "%x", &gotSum);
-
-  //  Serial.println(gotSum, HEX);
-  //  Serial.println(checkSum, HEX);
-
-  return (checkSum == gotSum ? length : 0);
+  return (length);
 }
 
 void GPSwriteln(char *p)

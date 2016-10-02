@@ -1,3 +1,5 @@
+#define USE_USB false
+
 #include <Wire.h>
 #include <avr/sleep.h>
 #include <RTC8564.h>
@@ -19,11 +21,12 @@ void timerHandler()
 }
 
 void setup() {
+#if USE_USB
   while (!Serial);
 
   Serial.begin(115200);
   Serial.println("start RTC test");
-
+#endif
   //  set_sleep_mode(SLEEP_MODE_IDLE);
     set_sleep_mode(SLEEP_MODE_ADC);
 //  set_sleep_mode(SLEEP_MODE_STANDBY);
@@ -41,5 +44,7 @@ void setup() {
 void loop() {
   sleep_mode();
   digitalWrite(LEDPIN, counter % 2);
+#if USE_USB
   Serial.println(counter);
+#endif
 }
