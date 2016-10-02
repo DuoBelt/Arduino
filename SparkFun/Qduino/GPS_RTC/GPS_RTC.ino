@@ -3,12 +3,33 @@
 #include "Arduino.h"
 #include "Wire.h"
 #include "Qduino.h"
+#include <RTC8564.h>
+
+#define PIN_RTC_INT (15)
+#define INTERVAL_SECS (1)
 
 fuelGauge battery;  // initialize the library
+RTC8564 rtc;
+
+volatile bool gotInterrupt = false;
+volatile unsigned int counter = 0;
+
+ISR(PCINT0_vect) {
+  if (digitalRead(PIN_RTC_INT) == LOW) {
+    counter++;
+    gotInterrupt = true;
+  }
+}
 
 void setup() {
   Wire.begin();
   battery.setup();  // setup fuel gauge
+
+  pinMode(PIN_RTC_INT, INPUT_PULLUP);
+  rtc.begin();
+  rtc.setTimer( rtc.TIMING_1_SEC, INTERVAL_SECS, true, true );
+  PCMSK0 |= (1 << PCINT1); // on D15
+  PCICR  |= (1 << PCIE0); // enable PCI
 
   set_sleep_mode(SLEEP_MODE_IDLE);
 
@@ -32,18 +53,20 @@ void setup() {
 void loop() {
   char buffer[0x100];
 
-  int charge = battery.chargePercentage();  // get %
-  battery.reset();  // reset for next data request
-  Serial.println("Battery " + String(charge) + "%");
-
-  int length = GPSreadln(buffer);
-  if (length) {
-    //    Serial.println(buffer);
-    checkNMEA(buffer);
+  if (gotInterrupt) {
+    gotInterrupt = false;
+    int charge = battery.chargePercentage();  // get %
+    battery.reset();  // reset for next data request
+    Serial.println("Battery " + String(charge) + "%");
   }
   else {
-    sleep_mode();
+    int length = GPSreadln(buffer);
+    if (length) {
+      //    Serial.println(buffer);
+      checkNMEA(buffer);
+    }
   }
+  sleep_mode();
 }
 
 int GPSreadln(char *buffer) {
