@@ -1,6 +1,5 @@
 #define USE_USB true
 
-#include <Wire.h>
 #include <avr/sleep.h>
 #include <RTC8564.h>
 
@@ -21,7 +20,9 @@ void timerHandler()
 }
 
 void setup() {
+  Serial1.begin(115200); // 3GIM
 #if USE_USB
+
   while (!Serial);
 
   Serial.begin(115200);
@@ -35,9 +36,17 @@ void setup() {
   rtc.setTimer( rtc.TIMING_1_SEC, INTERVAL_SECS, true, true );
 
   pinMode(LEDPIN, OUTPUT);
+
+  //  Serial1.println("$YV");
+  Serial1.println("$WG http://www.klabo.co.jp");
 }
 
+
 void loop() {
+  while (Serial1.available()) {
+    char c = Serial1.read();
+    Serial.print(c);
+  }
   sleep_mode();
   digitalWrite(LEDPIN, counter % 2);
   if (counter > lastC) {

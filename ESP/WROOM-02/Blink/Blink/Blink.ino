@@ -11,37 +11,22 @@
 
   modified 8 May 2014
   by Scott Fitzgerald
-*/
+ */
 
 
 // the setup function runs once when you press reset or power the board
 void setup() {
-  while (true) {
-    if (Serial) break;
-  }
-  Serial.begin(115200);
-  Serial.println("Begin!");
-
-  Serial1.begin(115200);
   // initialize digital pin 13 as an output.
   pinMode(13, OUTPUT);
+  Serial.begin(115200);
 }
 
 // the loop function runs over and over again forever
 void loop() {
-  //
-#define VBATPIN A7
-
-  float measuredvbat = analogRead(VBATPIN);
-  measuredvbat *= 2;    // we divided by 2, so multiply back
-  measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
-  measuredvbat /= 1024; // convert to voltage
-  Serial.print("VBat: " ); Serial.println(measuredvbat);//
-
-  Serial.println("High!");
   digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
+  Serial.println("High");
   delay(1000);              // wait for a second
-  Serial.println("Low!");
   digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
+  Serial.println("Low");
   delay(1000);              // wait for a second
 }
