@@ -31,31 +31,35 @@ void loop() {
     opening = false;
   }
   else {
-    float V = ((analogRead(V42port)*2)*3.3)/0x400;
-    Serial.println("V = " + String(V,1));
+    float subV = ((analogRead(V42port) * 2) * 3.3) / 0x400;
+    Serial.println("subV = " + String(subV, 2));
 
-    Serial.println("[YR]");
-    Serial1.println("$YR");
+    float lipo = analogRead(VBATPIN);
+    lipo *= 2;    // we divided by 2, so multiply back
+    lipo *= 3.3;  // Multiply by 3.3V, our reference voltage
+    lipo /= 1024; // convert to voltage
+    Serial.println("lipo = " + String(lipo, 2));
+
+    Serial.println("[YS]");
+    Serial1.println("$YS");
     p = readLN();
     Serial.println(p);
-    if (strncmp(p, "$YR=OK", 5) == 0) {
-      Serial.println("[YS]");
-      Serial1.println("$YS");
+    if (strcmp(p, "$YS=OK 1") == 0) {
+      Serial.println("[YT]");
+      Serial1.println("$YT");
       p = readLN();
       Serial.println(p);
-      if (strcmp(p, "$YS=OK 1") == 0) {
-        Serial.println("[YT]");
-        Serial1.println("$YT");
+      if (strncmp(p, "$YT=OK", 5) == 0) {
+        Serial.println("[LG]");
+        Serial1.println("$LG MSBASED 1");
         p = readLN();
-        Serial.println(p);
-        if (strncmp(p, "$YT=OK", 5) == 0) {
-          Serial.println("[LG]");
-          Serial1.println("$LG MSBASED 1");
+        if (strncmp(p, "$LG=OK", 5) == 0) {
+          Serial.println(p);
+          Serial.println("[YR]");
+          Serial1.println("$YR");
           p = readLN();
-          if (strncmp(p, "$LG=OK", 5) == 0) {
-            Serial.println(p);
-            Serial.println("-----------------------------------------------------------------------");
-          }
+          Serial.println(p);
+          Serial.println("-----------------------------------------------------------------------");
         }
       }
     }
