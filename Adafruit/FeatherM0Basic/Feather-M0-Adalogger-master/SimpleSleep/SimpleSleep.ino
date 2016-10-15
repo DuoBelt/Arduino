@@ -1,20 +1,13 @@
-/*
-  Simple RTC Alarm for Adafruit Feather M0 modified from 
-  RTCzero library example at https://github.com/arduino-libraries/RTCZero
-  By: CaveMoa
-  Date: 30/12/15
-*/
-
 #include <RTCZero.h>
 
-/* Create an rtc object */
+#define PIN_LED (13)
+
 RTCZero rtc;
 int AlarmTime;
 
 void setup()
 {
   rtc.begin();
-  
 }
 
 void loop()
