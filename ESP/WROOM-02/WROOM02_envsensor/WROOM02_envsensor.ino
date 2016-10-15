@@ -1,16 +1,30 @@
+#include <Adafruit_INA219.h>
+
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include <ESP8266WiFi.h>
+#include <Ticker.h>
 extern "C" {
 #include "user_interface.h"
 }
 
 Adafruit_BME280 bme; // I2C
+Adafruit_INA219 ina219; // ina219
+Ticker ticker;
 
-#define DELAYMS (1000 * 60 * 1)
 #define LEDPIN (13)
+
+#define VS 10
+
+String thisMAC = "";
+static unsigned int upCount = 0L;
+
+static float lastSendV = 0.0;
+static float lastSendA = 0.0;
+
+static int delayMS = 1000*10;
 
 void setup() {
   Serial.begin(115200);
@@ -23,6 +37,18 @@ void setup() {
 
   wifi_set_sleep_type(LIGHT_SLEEP_T);
 
+  unsigned char MAC_STA[6];
+  unsigned char *MAC  = WiFi.macAddress(MAC_STA);
+
+  thisMAC =
+    String(MAC[0], HEX) + ":" +
+    String(MAC[1], HEX) + ":" +
+    String(MAC[2], HEX) + ":" +
+    String(MAC[3], HEX) + ":" +
+    String(MAC[4], HEX) + ":" +
+    String(MAC[5], HEX);
+  Serial.println(thisMAC);
+
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000 * 1);
@@ -31,21 +57,48 @@ void setup() {
   Serial.println("");
 
   bme.begin(0x76);
+  Serial.println("Measuring T:P:H with BME280.");
+  ina219.begin();
+  Serial.println("Measuring voltage and current with INA219.");
 }
 
 void loop() {
+  delay(delayMS);
+  //
+  float shuntvoltage = 0;
+  float busvoltage = 0;
+  float current_mA = 0;
+  float loadvoltage = 0;
+
+  shuntvoltage = ina219.getShuntVoltage_mV();
+  busvoltage = ina219.getBusVoltage_V();
+  current_mA = ina219.getCurrent_mA();
+  loadvoltage = busvoltage + (shuntvoltage / 1000);
+
+  Serial.print("Voltage:  "); Serial.print(loadvoltage); Serial.println(" V");
+  Serial.print("Current:       "); Serial.print(current_mA); Serial.println(" mA");
+  Serial.println("");
+  //
   float t = bme.readTemperature();
   float p = bme.readPressure() / 100.0F;
   float h = bme.readHumidity();
-  float v = 0.0;
+  //  float v = 0.0;
+  //
+  //  int adcv =  system_adc_read(); // from TOUT (4.2V - 470K - 150K - GND)
+  //  v = (float)adcv / (1024/4.2);
 
   int adcv =  system_adc_read(); // from TOUT (4.2V - 470K - 150K - GND)
-  v = (float)adcv / (1024/4.2);
+  float v = (float)adcv / (1024 / 4.2);
+
+  delayMS = 1000*((loadvoltage>lastSendV || current_mA>lastSendA)? 3:60);
   
+  lastSendV = loadvoltage;
+  lastSendA = current_mA;
+
   digitalWrite(LEDPIN, HIGH);
 
   String nickname = "sekitakovich";
-  String info = "t=" + String(t) + "&h=" +  String(h) + "&p=" + String(p) + "&v=" + String(v) + "&nickname=" + nickname;
+  String info = "t=" + String(t) + "&h=" +  String(h) + "&p=" + String(p) + "&v=" + String(v,3) + "&mac=" + thisMAC + "&up=" + upCount++ + "&spv=" + String(loadvoltage,3) + "&spa=" + String(current_mA,3);
   Serial.println(info);
 
   char *host = "www.klabo.co.jp";
@@ -55,7 +108,7 @@ void loop() {
     String url = String("/tph.php?")  + info;
     client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
 
-    delay(10);
+    delay(1000);
 
     while (client.available()) {
       String line = client.readStringUntil('\r');
@@ -64,6 +117,4 @@ void loop() {
   }
 
   digitalWrite(LEDPIN, LOW);
-
-  delay(DELAYMS);
 }

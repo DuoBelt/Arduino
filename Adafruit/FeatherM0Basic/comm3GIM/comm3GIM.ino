@@ -1,8 +1,14 @@
+#include <RTCZero.h>
+
 #define V42port (A5)
 #define PIN_PON (A0)
+#define PIN_LED (13)
 #define VBATPIN A7
 
+RTCZero rtc;
+
 bool opening = true;
+unsigned int counter = 0;
 
 void setup() {
   while (true) {
@@ -10,6 +16,7 @@ void setup() {
   }
   Serial.begin(115200);
 
+  rtc.begin();
   pinMode(V42port, INPUT);
 
   pinMode(PIN_PON, OUTPUT);
@@ -17,6 +24,8 @@ void setup() {
   Serial.println("Power on!");
   delay(1000);
   digitalWrite(PIN_PON, LOW);
+
+  pinMode(PIN_LED, OUTPUT);
 
   Serial1.begin(115200);
 
@@ -31,6 +40,8 @@ void loop() {
     opening = false;
   }
   else {
+    digitalWrite(PIN_LED, HIGH);
+
     float subV = ((analogRead(V42port) * 2) * 3.3) / 0x400;
     Serial.println("subV = " + String(subV, 2));
 
@@ -59,10 +70,22 @@ void loop() {
           Serial1.println("$YR");
           p = readLN();
           Serial.println(p);
-          Serial.println("-----------------------------------------------------------------------");
+          //
+          if ((counter % 12) == 0) {
+            Serial.println("$WG");
+            Serial1.println("$WG http://www.klabo.co.jp/tph.php?t=0.00&h=0.00&p=0.00&mac=FF:FF:FF:FF:FF:FF&up=0&spv=" + String(subV, 2) +  "&spa=" + String(lipo, 2));
+            p = readLN();
+            Serial.println(p);
+            p = readLN();
+            Serial.println(p);
+          }
+          counter++;
+          Serial.println("----------------------------------------------------------");
+          //
         }
       }
     }
+    digitalWrite(PIN_LED, LOW);
     delay(5000);
   }
 }
