@@ -5,6 +5,7 @@
 
 #include <RTCZero.h>
 
+#define PIN_TSW (12)
 #define PIN_LED (6)
 
 RTCZero rtcZERO;
@@ -13,10 +14,17 @@ int alarmSS = 0;
 
 Adafruit_7segment matrix = Adafruit_7segment();
 
+void onTSW(){
+  aCounter = 0;  
+}
+
 void setup()
 {
   pinMode(PIN_LED, OUTPUT);
   digitalWrite(PIN_LED, LOW);
+
+  pinMode(PIN_TSW, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(PIN_TSW), onTSW, FALLING);
 
   matrix.begin(0x70);
 
