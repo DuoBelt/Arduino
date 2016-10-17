@@ -1,3 +1,6 @@
+#include <Adafruit_BME280.h>
+#include <Adafruit_INA219.h>
+
 #define INTREVAL(s) ((s)-1)
 #define VBATPIN A7
 
@@ -5,6 +8,9 @@
 
 #define PIN_TSW (5)
 #define PIN_LED (6)
+
+Adafruit_INA219 ina219;
+Adafruit_BME280 bme280;
 
 RTCZero rtcZERO;
 unsigned long aCounter = 0;
@@ -23,6 +29,9 @@ void setup()
   pinMode(PIN_TSW, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PIN_TSW), onTSW, FALLING);
 
+  ina219.begin();
+  bme280.begin(0x76);
+
   rtcZERO.begin();
   // see http://forum.arduino.cc/index.php?topic=410699.msg2828987#msg2828987
   EIC->CONFIG[1].bit.FILTEN1 = 1;
@@ -40,15 +49,29 @@ void loop()
 {
   digitalWrite(PIN_LED, HIGH);
   // --------------------------------------------------------------------------------------------------
+  float thisT = bme280.readTemperature();
+  float thisH = bme280.readHumidity();
+  float thisP = bme280.readPressure() / 100.0F;
+
+  String tph =  String(thisT, 2) + ":" + String(thisP, 2) + ":" + String(thisH, 2);
+
+  // --------------------------------------------------------------------------------------------------
+  float shuntvoltage = 0;
+  float busvoltage = 0;
+  float current_mA = 0;
+  float loadvoltage = 0;
+
+  shuntvoltage = ina219.getShuntVoltage_mV();
+  busvoltage = ina219.getBusVoltage_V();
+  current_mA = ina219.getCurrent_mA();
+  loadvoltage = busvoltage + (shuntvoltage / 1000);
+  // --------------------------------------------------------------------------------------------------
   float lipoV = (analogRead(VBATPIN) * (2 * 3.3)) / 0x400;
 
-  int thisH = rtcZERO.getHours();
-  int thisM = rtcZERO.getMinutes();
-  int thisS = rtcZERO.getSeconds();
+  String hms = String(rtcZERO.getHours()) + ":" + String(rtcZERO.getMinutes()) + ":" + String(rtcZERO.getSeconds());
+  String va = String(loadvoltage, 2) + "V" + ":" + String(current_mA, 2) + "mA";
 
-  String hms = String(thisH) + ":" + String(thisM) + ":" + String(thisS);
-
-  String line = String(aCounter) + " at " + hms + " " + "VB=" + String(lipoV, 2);
+  String line = String(aCounter) + " at " + hms + " VB=" + String(lipoV, 2) + " VA=" + va + " TPH=" + tph;
   Serial1.println(line);
 
   //  int dd = random(1,3000);
@@ -57,7 +80,7 @@ void loop()
 
   // --------------------------------------------------------------------------------------------------
   digitalWrite(PIN_LED, LOW);
-  rtcZERO.setAlarmSeconds((rtcZERO.getSeconds() + INTREVAL(3)) % 60);
+  rtcZERO.setAlarmSeconds((rtcZERO.getSeconds() + INTREVAL(5)) % 60);
   rtcZERO.standbyMode();
 }
 

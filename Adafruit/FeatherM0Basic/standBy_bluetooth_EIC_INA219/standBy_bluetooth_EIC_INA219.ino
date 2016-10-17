@@ -1,3 +1,5 @@
+#include <Adafruit_INA219.h>
+
 #define INTREVAL(s) ((s)-1)
 #define VBATPIN A7
 
@@ -6,6 +8,7 @@
 #define PIN_TSW (5)
 #define PIN_LED (6)
 
+Adafruit_INA219 ina219;
 RTCZero rtcZERO;
 unsigned long aCounter = 0;
 
@@ -22,6 +25,8 @@ void setup()
 
   pinMode(PIN_TSW, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PIN_TSW), onTSW, FALLING);
+
+  ina219.begin();
 
   rtcZERO.begin();
   // see http://forum.arduino.cc/index.php?topic=410699.msg2828987#msg2828987
@@ -40,6 +45,16 @@ void loop()
 {
   digitalWrite(PIN_LED, HIGH);
   // --------------------------------------------------------------------------------------------------
+  float shuntvoltage = 0;
+  float busvoltage = 0;
+  float current_mA = 0;
+  float loadvoltage = 0;
+
+  shuntvoltage = ina219.getShuntVoltage_mV();
+  busvoltage = ina219.getBusVoltage_V();
+  current_mA = ina219.getCurrent_mA();
+  loadvoltage = busvoltage + (shuntvoltage / 1000);
+  // --------------------------------------------------------------------------------------------------
   float lipoV = (analogRead(VBATPIN) * (2 * 3.3)) / 0x400;
 
   int thisH = rtcZERO.getHours();
@@ -47,8 +62,9 @@ void loop()
   int thisS = rtcZERO.getSeconds();
 
   String hms = String(thisH) + ":" + String(thisM) + ":" + String(thisS);
+  String va = String(loadvoltage,2) + "V" + ":" + String(current_mA,2) + "mA";
 
-  String line = String(aCounter) + " at " + hms + " " + "VB=" + String(lipoV, 2);
+  String line = String(aCounter) + " at " + hms + " VB=" + String(lipoV, 2) + " VA=" + va;
   Serial1.println(line);
 
   //  int dd = random(1,3000);
