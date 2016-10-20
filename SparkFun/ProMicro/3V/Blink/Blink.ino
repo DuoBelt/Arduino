@@ -19,7 +19,7 @@
 
 // the setup function runs once when you press reset or power the board
 
-#define LEDPIN (17)
+#define LEDPIN (9)
 
 volatile unsigned long counter = 0;
 
