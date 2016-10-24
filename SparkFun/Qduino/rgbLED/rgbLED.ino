@@ -41,9 +41,9 @@ void setup() {
 }
 
 void loop() {
-
+int av = analogRead(A0);
 #if USE_SERIAL
-  Serial.println("loop!");
+  Serial.println(av);
 #endif
   q.setRGB(100, 150, 200);  // r, g, b values
 
