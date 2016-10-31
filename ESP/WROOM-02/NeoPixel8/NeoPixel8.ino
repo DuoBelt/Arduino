@@ -5,14 +5,13 @@ extern "C" {
 #include "user_interface.h"
 }
 
-#define PIN 0
 #define LED 13
 
-#define RGBREDPIN 14
+#define RGBLEDPIN 14
 #define RGBLEDCNT 8
 
 Ticker ticker;
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(RGBLEDCNT, RGBREDPIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(RGBLEDCNT, RGBLEDPIN, NEO_GRB + NEO_KHZ800);
 static unsigned int counter = 0;
 
 void showNP(int offset, unsigned char r, unsigned char g, unsigned char b) {
