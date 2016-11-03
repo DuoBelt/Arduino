@@ -62,15 +62,20 @@ void setup() {
 
   Serial2.println("Version " + String(__TIMESTAMP__) + " start");
 
+//  Serial2.println(EIC->WAKEUP.vec.WAKEUPEN);
+  
   rtcZERO.begin();
   // see http://forum.arduino.cc/index.php?topic=410699.msg2828987#msg2828987
   EIC->CONFIG[1].bit.FILTEN1 = 1;
-  //  EIC->WAKEUP.vec.WAKEUPEN = (1 << 15); // D5 = EXTINT15
-  EIC->WAKEUP.vec.WAKEUPEN = ((1 << 15) | (1 << 1) | (1 << 0)); // D5 = EXTINT15
+    EIC->WAKEUP.vec.WAKEUPEN = EIC->WAKEUP.vec.WAKEUPEN | (1 << 15); // D5 = EXTINT15
+//  EIC->WAKEUP.vec.WAKEUPEN = ((1 << 15) | (1 << 1) | (1 << 0)); // D5 = EXTINT15
   GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK2 |  GCLK_CLKCTRL_ID( GCLK_CLKCTRL_ID_EIC_Val );
   while (GCLK->STATUS.bit.SYNCBUSY) {
     delay(1);
   }
+
+//    Serial2.println(EIC->WAKEUP.vec.WAKEUPEN);
+
   rtcZERO.attachInterrupt(alarmSR);
   rtcZERO.enableAlarm(rtcZERO.MATCH_SS);
 }
@@ -113,9 +118,9 @@ void loop() {
     float lipoV = (analogRead(VBATPIN) * (2 * 3.3)) / 0x400;
     Serial2.println("LiPo " + String(lipoV, 2));
     Serial2.println("Main " + String(loadvoltage, 2));
-    delay(3000);
     rtcZERO.setAlarmSeconds((rtcZERO.getSeconds() + INTREVAL(3)) % 60);
-    //    rtcZERO.standbyMode();
+//        rtcZERO.standbyMode();
+    delay(3000);
   }
 }
 
