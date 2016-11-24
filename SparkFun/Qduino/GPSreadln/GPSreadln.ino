@@ -46,7 +46,17 @@ void loop() {
   }
 }
 
-int GPSreadln(char *buffer) {
+String GPSreadln(){
+  String value = "";
+  if(Serial1.available() > 0){
+    String rx = Serial1.readStringUntil(0x0a);
+    value = rx.substring(rx.length-2);
+  }
+  return(value);
+}
+
+
+int __GPSreadln(char *buffer) {
   int length = 0;
   char checkSum = 0;
   bool loop = true;
