@@ -3,6 +3,8 @@
 #define SS_RX (4)
 #define SS_TX (5)
 
+#define PIN_ADXL345_INT1 (3)
+
 #include <SparkFun_ADXL345.h>
 #include <avr/sleep.h>
 
@@ -12,16 +14,18 @@ ADXL345 adxl = ADXL345();
 
 SoftwareSerial ss(SS_RX, SS_TX);
 
-int interruptPin = 3; // only INT1:pin3 Pro Trinket
+int interruptPin = PIN_ADXL345_INT1; // only INT1:pin3 Pro Trinket
 volatile bool busyINT = false;
 bool prevActivity = false;
 unsigned int counter = 0;
+
+#define ACT_TH (255)
+#define PIN_VOLUME A0
 
 #if USE_VOLUME
 byte volumeA = 0;
 byte volumeI = 0;
 #else
-#define ACT_TH (255)
 byte volumeA = ACT_TH;
 byte volumeI = ACT_TH;
 #endif
@@ -33,8 +37,6 @@ void setup() {
   Serial.begin(115200);
   Serial.println("check the ACTIVITY start!");
 
-  //  pinMode(SS_RX,INPUT);
-  //  pinMode(SS_TX,OUTPUT);
   ss.begin(115200);
 
   adxl.powerOn();
@@ -58,7 +60,6 @@ void setup() {
   adxl.doubleTapINT(0);
   adxl.singleTapINT(0);
 
-  pinMode(3, INPUT);
   byte interrupts = adxl.getInterruptSource(); // Why ????????????????????????????????
   attachInterrupt(digitalPinToInterrupt(interruptPin), thisISR, RISING);   // Attach Interrupt
 
@@ -67,14 +68,16 @@ void setup() {
   int a;
   for (a = 0; a < 6; a++) {
     digitalWrite(PIN_LED, a % 2);
-    delay(500);
+    delay(100);
   }
   //
   ss.println("Ready go");
-  //  set_sleep_mode(SLEEP_MODE_IDLE);
+#if USE_VOLUME
+  byte v = analogRead(PIN_VOLUME) / 4;
+  ss.println("Volume " + String(v));
+#endif
+//    set_sleep_mode(SLEEP_MODE_IDLE);
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-
-  //  ss.println("Ready go!");
 }
 
 void thisISR() {
@@ -83,14 +86,15 @@ void thisISR() {
 
 void loop() {
 #if USE_VOLUME
-  byte v = analogRead(A0) / 4;
+  byte v = analogRead(PIN_VOLUME) / 4;
   if (v != volumeA) {
     volumeA = v;
     volumeI = v;
     adxl.setActivityThreshold(volumeA);      // 62.5mg per increment   // Set activity   // Inactivity thresholds (0-255)
     adxl.setInactivityThreshold(volumeI);    // 62.5mg per increment   // Set inactivity // Inactivity thresholds (0-255)
-    //    ss.println("Set volume to " + String(v));
   }
+#else
+  byte v = ACT_TH;
 #endif
   if (busyINT) {
     busyINT = false;
@@ -106,8 +110,8 @@ void loop() {
       if (thisActivity) {
         digitalWrite(PIN_LED, HIGH);
         counter++;
-//        Serial.println("Activity " + String(counter));
         ss.println(counter);
+//        ss.println(v);
         delay(10);
         digitalWrite(PIN_LED, LOW);
       }
