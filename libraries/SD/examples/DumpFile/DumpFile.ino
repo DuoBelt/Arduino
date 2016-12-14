@@ -1,18 +1,18 @@
 /*
-  SD card datalogger
+  SD card file dump
 
- This example shows how to log data from three analog sensors
- to an SD card using the SD library.
+ This example shows how to read a file from the SD card using the
+ SD library and send it over the serial port.
 
  The circuit:
- * analog sensors on analog ins 0, 1, and 2
  * SD card attached to SPI bus as follows:
  ** MOSI - pin 11
  ** MISO - pin 12
  ** CLK - pin 13
- ** CS - pin 4
+ ** CS - pin 4 (for MKRZero SD: SDCARD_SS_PIN)
 
- created  24 Nov 2010
+ created  22 December 2010
+ by Limor Fried
  modified 9 Apr 2012
  by Tom Igoe
 
@@ -42,31 +42,17 @@ void setup() {
     return;
   }
   Serial.println("card initialized.");
-}
-
-void loop() {
-  // make a string for assembling the data to log:
-  String dataString = "";
-
-  // read three sensors and append to the string:
-  for (int analogPin = 0; analogPin < 3; analogPin++) {
-    int sensor = analogRead(analogPin);
-    dataString += String(sensor);
-    if (analogPin < 2) {
-      dataString += ",";
-    }
-  }
 
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
-  File dataFile = SD.open("datalog.txt", FILE_WRITE);
+  File dataFile = SD.open("datalog.txt");
 
   // if the file is available, write to it:
   if (dataFile) {
-    dataFile.println(dataString);
+    while (dataFile.available()) {
+      Serial.write(dataFile.read());
+    }
     dataFile.close();
-    // print to the serial port too:
-    Serial.println(dataString);
   }
   // if the file isn't open, pop up an error:
   else {
@@ -74,11 +60,6 @@ void loop() {
   }
 }
 
-
-
-
-
-
-
-
+void loop() {
+}
 
