@@ -8,6 +8,7 @@
 #pragma once
 
 #include "../Configuration.hpp"
+#include "../TypeTraits/EnableIf.hpp"
 #include "DummyPrint.hpp"
 #include "DynamicStringBuilder.hpp"
 #include "IndentedPrint.hpp"
@@ -49,8 +50,15 @@ class JsonPrintable {
     return printTo(sb);
   }
 
-  size_t printTo(String &str) const {
-    DynamicStringBuilder sb(str);
+  template <size_t N>
+  size_t printTo(char (&buffer)[N]) const {
+    return printTo(buffer, N);
+  }
+
+  template <typename TString>
+  typename TypeTraits::EnableIf<StringFuncs<TString>::has_append, size_t>::type
+  printTo(TString &str) const {
+    DynamicStringBuilder<TString> sb(str);
     return printTo(sb);
   }
 
@@ -64,13 +72,20 @@ class JsonPrintable {
     return prettyPrintTo(sb);
   }
 
+  template <size_t N>
+  size_t prettyPrintTo(char (&buffer)[N]) const {
+    return prettyPrintTo(buffer, N);
+  }
+
   size_t prettyPrintTo(Print &print) const {
     IndentedPrint indentedPrint = IndentedPrint(print);
     return prettyPrintTo(indentedPrint);
   }
 
-  size_t prettyPrintTo(String &str) const {
-    DynamicStringBuilder sb(str);
+  template <typename TString>
+  typename TypeTraits::EnableIf<StringFuncs<TString>::has_append, size_t>::type
+  prettyPrintTo(TString &str) const {
+    DynamicStringBuilder<TString> sb(str);
     return prettyPrintTo(sb);
   }
 

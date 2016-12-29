@@ -5,8 +5,8 @@
 // https://github.com/bblanchon/ArduinoJson
 // If you like this project, please add a star!
 
-#include <gtest/gtest.h>
 #include <ArduinoJson.h>
+#include <gtest/gtest.h>
 
 class JsonVariant_Subscript_Tests : public ::testing::Test {
  protected:
@@ -24,6 +24,9 @@ TEST_F(JsonVariant_Subscript_Tests, Array) {
   EXPECT_EQ(2, _variant.size());
   EXPECT_STREQ("element at index 0", _variant[0].asString());
   EXPECT_STREQ("element at index 1", _variant[1].asString());
+  EXPECT_STREQ(
+      "element at index 0",
+      _variant[static_cast<unsigned char>(0)].asString());  // issue #381
   EXPECT_FALSE(_variant[-1].success());
   EXPECT_FALSE(_variant[3].success());
   EXPECT_FALSE(_variant["0"].success());
@@ -55,4 +58,26 @@ TEST_F(JsonVariant_Subscript_Tests, String) {
   EXPECT_EQ(0, _variant.size());
   EXPECT_FALSE(_variant["0"].success());
   EXPECT_FALSE(_variant[0].success());
+}
+
+TEST_F(JsonVariant_Subscript_Tests, ObjectSetValue) {
+  _variant = _jsonBuffer.createObject();
+  _variant["hello"] = "world";
+  EXPECT_EQ(1, _variant.size());
+  EXPECT_STREQ("world", _variant["hello"]);
+}
+
+TEST_F(JsonVariant_Subscript_Tests, ArraySetValue) {
+  _variant = _jsonBuffer.parseArray("[\"hello\"]");
+  _variant[0] = "world";
+  EXPECT_EQ(1, _variant.size());
+  EXPECT_STREQ("world", _variant[0]);
+}
+
+TEST_F(JsonVariant_Subscript_Tests, NestedObjectSetValue) {
+  _variant = _jsonBuffer.parseArray("[{}]");
+  _variant[0]["hello"] = "world";
+  EXPECT_EQ(1, _variant.size());
+  EXPECT_EQ(1, _variant[0].size());
+  EXPECT_STREQ("world", _variant[0]["hello"]);
 }
